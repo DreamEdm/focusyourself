@@ -83,6 +83,7 @@ Remove-Item (Join-Path $releaseDir '_staging') -Recurse -Force
 $sums = Get-ChildItem $releaseDir -File | Where-Object Extension -in '.exe', '.zip' | ForEach-Object {
     '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
 }
-Set-Content -Path (Join-Path $releaseDir 'SHA256SUMS.txt') -Value $sums -Encoding ascii
+# 用 LF 换行，Linux / macOS 上 sha256sum -c 才能直接校验
+[IO.File]::WriteAllText((Join-Path $releaseDir 'SHA256SUMS.txt'), (($sums -join "`n") + "`n"))
 
 Get-ChildItem $releaseDir | Format-Table Name, @{ n = 'Size (MB)'; e = { '{0:N1}' -f ($_.Length / 1MB) } } -AutoSize
