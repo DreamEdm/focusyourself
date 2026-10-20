@@ -1,0 +1,342 @@
+:root {
+  --bg: #0f1115;
+  --surface: rgba(28, 31, 38, 0.6);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e8eaed;
+  --dim: #9aa0aa;
+  --faint: #636a75;
+  --focus: #ff6b5b;
+  --break: #4cc38a;
+  --track: rgba(255, 255, 255, 0.07);
+  --ghost: rgba(255, 255, 255, 0.06);
+  --aurora-opacity: 0.55;
+  --ring-r: 116;
+}
+
+/* 亮色主题（跟随桌面端设置） */
+:root[data-theme="light"] {
+  --bg: #f5f6f8;
+  --surface: rgba(255, 255, 255, 0.72);
+  --border: rgba(0, 0, 0, 0.08);
+  --text: #1f2329;
+  --dim: #5b6270;
+  --faint: #8a909b;
+  --focus: #ee5440;
+  --break: #239b63;
+  --track: rgba(0, 0, 0, 0.08);
+  --ghost: rgba(0, 0, 0, 0.05);
+  --aurora-opacity: 0.32;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 缓慢流动的极光背景 ---------- */
+.aurora {
+  position: fixed;
+  inset: -20%;
+  filter: blur(90px) saturate(120%);
+  opacity: var(--aurora-opacity);
+  z-index: 0;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  animation: drift 26s ease-in-out infinite alternate;
+}
+
+.b1 {
+  width: 46vw;
+  height: 46vw;
+  left: 18%;
+  top: 8%;
+  background: radial-gradient(circle, #ff6b5b 0%, transparent 65%);
+}
+
+.b2 {
+  width: 40vw;
+  height: 40vw;
+  right: 12%;
+  top: 30%;
+  background: radial-gradient(circle, #7c5cff 0%, transparent 65%);
+  animation-duration: 32s;
+  animation-delay: -8s;
+}
+
+.b3 {
+  width: 36vw;
+  height: 36vw;
+  left: 34%;
+  bottom: 2%;
+  background: radial-gradient(circle, #ff9a5b 0%, transparent 65%);
+  opacity: 0.6;
+  animation-duration: 38s;
+  animation-delay: -16s;
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(6vw, -4vh) scale(1.12); }
+  100% { transform: translate(-5vw, 5vh) scale(0.94); }
+}
+
+/* ---------- 主体 ---------- */
+.stage {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.brand {
+  position: fixed;
+  top: 28px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dim);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 环形倒计时 ---------- */
+.ring-wrap {
+  position: relative;
+  width: min(300px, 60vw);
+  aspect-ratio: 1;
+  margin-bottom: 34px;
+}
+
+.ring-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 107, 91, 0.22), transparent 70%);
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.92); opacity: 0.6; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring circle {
+  fill: none;
+  stroke-width: 10;
+}
+
+.ring .track {
+  stroke: var(--track);
+}
+
+.ring .progress {
+  stroke: url(#g);
+  stroke-linecap: round;
+  stroke-dasharray: 728.85; /* 2πr */
+  stroke-dashoffset: 728.85;
+  transition: stroke-dashoffset 0.9s linear;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 91, 0.45));
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.phase {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--focus);
+  letter-spacing: 0.18em;
+}
+
+.time {
+  font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  font-size: clamp(48px, 9vw, 72px);
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin: 4px 0;
+}
+
+.until {
+  font-size: 12px;
+  color: var(--faint);
+}
+
+/* ---------- 文案 ---------- */
+h1 {
+  font-size: clamp(24px, 3.4vw, 34px);
+  font-weight: 600;
+  margin: 0 0 12px;
+  letter-spacing: 0.01em;
+}
+
+.sub {
+  margin: 0;
+  font-size: 15px;
+  color: var(--dim);
+}
+
+.sub strong {
+  color: var(--text);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 107, 91, 0.14);
+}
+
+.quote {
+  margin: 26px 0 0;
+  max-width: 520px;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--faint);
+  min-height: 1.6em;
+  transition: opacity 0.6s ease;
+}
+
+.quote.fade {
+  opacity: 0;
+}
+
+.chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 26px;
+}
+
+.chip {
+  font-size: 12px;
+  color: var(--dim);
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+}
+
+/* ---------- 按钮 ---------- */
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.btn {
+  font: inherit;
+  font-size: 14px;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 26px;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.btn:active {
+  transform: none;
+}
+
+.btn.primary {
+  color: white;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ff8a6b, #ff5f6d);
+  box-shadow: 0 8px 24px rgba(255, 95, 109, 0.3);
+}
+
+.btn.ghost {
+  color: var(--dim);
+  background: var(--ghost);
+}
+
+/* ---------- 休息开始时的提示 ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 22px;
+  border-radius: 14px;
+  background: rgba(76, 195, 138, 0.14);
+  border: 1px solid rgba(76, 195, 138, 0.4);
+  color: var(--break);
+  backdrop-filter: blur(12px);
+  animation: rise 0.4s ease both;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+.toast span {
+  color: var(--dim);
+}
+
+body.released .ring .progress {
+  stroke: var(--break);
+  filter: none;
+}
+
+body.released .phase {
+  color: var(--break);
+}
+
+@media (max-height: 640px) {
+  .ring-wrap { width: 200px; margin-bottom: 20px; }
+  .quote, .chips { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob, .ring-wrap::before, .stage { animation: none; }
+}

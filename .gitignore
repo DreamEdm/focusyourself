@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+
+# 本地构建输出（发布包由 tools/build-release.ps1 生成，通过 GitHub Releases 分发）
+publish/
+release/

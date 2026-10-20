@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FocusYourself</title>
+  <link rel="icon" href="icons/icon32.png" />
+  <link rel="stylesheet" href="blocked.css" />
+</head>
+<body>
+  <div class="aurora" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <main class="stage">
+    <header class="brand">
+      <img src="icons/icon32.png" alt="" width="22" height="22" />
+      <span>FocusYourself</span>
+    </header>
+
+    <section class="ring-wrap" data-i18n-label="ringLabel">
+      <svg class="ring" viewBox="0 0 260 260">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FF8A6B" />
+            <stop offset="100%" stop-color="#FF5F6D" />
+          </linearGradient>
+        </defs>
+        <circle class="track" cx="130" cy="130" r="116" />
+        <circle class="progress" id="progress" cx="130" cy="130" r="116" />
+      </svg>
+      <div class="ring-center">
+        <div class="phase" id="phase" data-i18n="phaseFocus"></div>
+        <div class="time" id="time">--:--</div>
+        <div class="until" id="until" data-i18n="until"></div>
+      </div>
+    </section>
+
+    <h1 id="title" data-i18n="title"></h1>
+    <p class="sub" id="sub"><span data-i18n="subBefore"></span><strong id="site" data-i18n="thisSite"></strong><span data-i18n="subAfter"></span></p>
+
+    <blockquote class="quote" id="quote"></blockquote>
+
+    <div class="chips">
+      <span class="chip" id="rounds"></span>
+      <span class="chip" data-i18n="autoReturn"></span>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="close" data-i18n="closeTab"></button>
+      <button class="btn ghost" id="back" data-i18n="goBack"></button>
+    </div>
+  </main>
+
+  <div class="toast" id="release" hidden>
+    <strong data-i18n="releaseTitle"></strong>
+    <span id="releaseBody" data-i18n="releaseBody"></span>
+  </div>
+
+  <script type="module" src="blocked.js"></script>
+</body>
+</html>

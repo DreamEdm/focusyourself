@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root {
+      --bg: #14161b; --surface: #1c1f26; --border: #2e333d; --text: #e8eaed; --dim: #9aa0aa; --faint: #636a75;
+      --focus: #ff6b5b; --break: #4cc38a; --warn: #f5b455;
+    }
+    :root[data-theme="light"] {
+      --bg: #f5f6f8; --surface: #ffffff; --border: #e3e6eb; --text: #1f2329; --dim: #5b6270; --faint: #8a909b;
+      --focus: #ee5440; --break: #239b63; --warn: #c97a0e;
+    }
+    body {
+      width: 280px;
+      margin: 0;
+      padding: 18px;
+      background: var(--bg);
+      color: var(--text);
+      font: 13px "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+    }
+    .head { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+    .card { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+    .phase { font-size: 12px; letter-spacing: 0.12em; color: var(--dim); }
+    .time { font-size: 34px; font-weight: 300; font-variant-numeric: tabular-nums; margin-top: 2px; }
+    .focus .phase { color: var(--focus); }
+    .break .phase { color: var(--break); }
+    .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--dim); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+    .dot.on { background: var(--break); }
+    .faint { color: var(--faint); font-size: 12px; margin-top: 8px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="head"><img src="icons/icon32.png" width="22" height="22" alt="" />FocusYourself</div>
+  <div class="card" id="card">
+    <div class="phase" id="phase"></div>
+    <div class="time" id="time">--:--</div>
+    <div class="faint" id="domains"></div>
+  </div>
+  <div class="row"><span class="dot" id="dot"></span><span id="conn"></span></div>
+  <div class="faint" id="hint"></div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

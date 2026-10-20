@@ -1,0 +1,40 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 暗色主题配色。键名必须与 Colors.Light.xaml 完全一致 -->
+    <SolidColorBrush x:Key="BgBrush" Color="#FF14161B" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="#FF101216" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FF1C1F26" />
+    <SolidColorBrush x:Key="SurfaceHiBrush" Color="#FF252932" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#FF2E333D" />
+    <SolidColorBrush x:Key="TextBrush" Color="#FFE8EAED" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="#FF9AA0AA" />
+    <SolidColorBrush x:Key="TextFaintBrush" Color="#FF636A75" />
+    <SolidColorBrush x:Key="FocusBrush" Color="#FFFF6B5B" />
+    <SolidColorBrush x:Key="BreakBrush" Color="#FF4CC38A" />
+    <SolidColorBrush x:Key="LongBreakBrush" Color="#FF5B9CFF" />
+    <SolidColorBrush x:Key="WarnBrush" Color="#FFF5B455" />
+    <SolidColorBrush x:Key="FocusSoftBrush" Color="#26FF6B5B" />
+    <SolidColorBrush x:Key="WarnSoftBrush" Color="#14F5B455" />
+    <SolidColorBrush x:Key="WarnBorderBrush" Color="#40F5B455" />
+    <SolidColorBrush x:Key="BreakSoftBrush" Color="#1A4CC38A" />
+    <SolidColorBrush x:Key="HoverBrush" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="PressBrush" Color="#22FFFFFF" />
+    <SolidColorBrush x:Key="SubtleBrush" Color="#0AFFFFFF" />
+    <SolidColorBrush x:Key="SubtleBorderBrush" Color="#1AFFFFFF" />
+    <SolidColorBrush x:Key="RingTrackBrush" Color="#22FFFFFF" />
+    <SolidColorBrush x:Key="SwitchOffBrush" Color="#FF3A3F4A" />
+    <SolidColorBrush x:Key="KnobOffBrush" Color="#FFC9CDD3" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#55FFFFFF" />
+    <SolidColorBrush x:Key="OverlayBgBrush" Color="#CC14161B" />
+    <SolidColorBrush x:Key="OverlayBorderBrush" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="PopupBorderBrush" Color="#33FF6B5B" />
+    <SolidColorBrush x:Key="RingInnerBrush" Color="#14FF6B5B" />
+    <RadialGradientBrush x:Key="PopupBgBrush" Center="0.5,0" GradientOrigin="0.5,0" RadiusX="1.1" RadiusY="0.9">
+        <GradientStop Color="#FF3A2226" Offset="0" />
+        <GradientStop Color="#FF1C1F26" Offset="0.6" />
+        <GradientStop Color="#FF16181D" Offset="1" />
+    </RadialGradientBrush>
+    <Color x:Key="ShadowColor">#FF000000</Color>
+    <system:Double xmlns:system="clr-namespace:System;assembly=System.Runtime" x:Key="ShadowOpacity">0.5</system:Double>
+</ResourceDictionary>
