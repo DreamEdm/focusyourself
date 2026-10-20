@@ -17,6 +17,7 @@
   <a href="https://github.com/DreamEdm/focusyourself/releases/latest"><img src="https://img.shields.io/github/v/release/DreamEdm/focusyourself?color=E84850" alt="Latest release"></a>
   <a href="https://github.com/DreamEdm/focusyourself/releases"><img src="https://img.shields.io/github/downloads/DreamEdm/focusyourself/total?color=4CC38A" alt="Downloads"></a>
   <a href="https://github.com/DreamEdm/focusyourself/actions/workflows/ci.yml"><img src="https://github.com/DreamEdm/focusyourself/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/DreamEdm/focusyourself?color=blue" alt="License: MIT"></a>
   <br>
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4" alt="Platform: Windows 10 | 11">
   <img src="https://img.shields.io/badge/.NET-10-512BD4" alt=".NET 10">
@@ -240,3 +241,7 @@ Pushing a `v*` tag runs [`release.yml`](.github/workflows/release.yml), which te
 git tag v1.0.0
 git push origin v1.0.0
 ```
+
+## License
+
+[MIT](LICENSE) © DreamEdm
