@@ -24,6 +24,8 @@ public sealed record BridgeState(
     /// <summary>扩展页面跟随桌面端的语言（en / zh-CN）与主题（dark / light）。</summary>
     [JsonPropertyName("lang")] public string Lang { get; init; } = "en";
     [JsonPropertyName("theme")] public string Theme { get; init; } = "dark";
+    /// <summary>暂停的时刻（Unix 毫秒）；暂停时扩展按这个时刻冻结倒计时，没暂停为 null。</summary>
+    [JsonPropertyName("pausedAt")] public long? PausedAt { get; init; }
 
     public static BridgeState Idle { get; } = new("idle", [], null, null, 0);
 }

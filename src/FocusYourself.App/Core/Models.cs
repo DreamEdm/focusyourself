@@ -118,6 +118,8 @@ public sealed class FocusState
     public Phase Phase { get; set; } = Phase.Idle;
     public DateTime? EndsAtUtc { get; set; }
     public DateTime? PhaseStartedUtc { get; set; }
+    /// <summary>暂停的时刻；没有暂停为 null。</summary>
+    public DateTime? PausedAtUtc { get; set; }
     public int CompletedFocusRounds { get; set; }
 }
 

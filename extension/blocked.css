@@ -6,6 +6,7 @@
   --dim: #9aa0aa;
   --faint: #636a75;
   --focus: #ff6b5b;
+  --warn: #f5b455;
   --break: #4cc38a;
   --track: rgba(255, 255, 255, 0.07);
   --ghost: rgba(255, 255, 255, 0.06);
@@ -22,6 +23,7 @@
   --dim: #5b6270;
   --faint: #8a909b;
   --focus: #ee5440;
+  --warn: #c97a0e;
   --break: #239b63;
   --track: rgba(0, 0, 0, 0.08);
   --ghost: rgba(0, 0, 0, 0.05);
@@ -330,6 +332,16 @@ body.released .ring .progress {
 
 body.released .phase {
   color: var(--break);
+}
+
+/* 桌面端暂停：琥珀色，倒计时冻结 */
+body.paused .ring .progress {
+  stroke: var(--warn);
+  filter: none;
+}
+
+body.paused .phase {
+  color: var(--warn);
 }
 
 @media (max-height: 640px) {

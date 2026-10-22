@@ -10,7 +10,8 @@ namespace FocusYourself.Services;
 /// <summary>运行时绘制番茄图标，颜色随阶段变化（专注红、休息绿、长休息蓝、空闲灰）。</summary>
 public static class TrayIconFactory
 {
-    public static Bitmap DrawBitmap(Phase phase, int size = 64)
+    /// <param name="paused">暂停时番茄变成琥珀色，中间画两道暂停竖线。</param>
+    public static Bitmap DrawBitmap(Phase phase, int size = 64, bool paused = false)
     {
         var bmp = new Bitmap(size, size);
         using var g = Graphics.FromImage(bmp);
@@ -19,7 +20,7 @@ public static class TrayIconFactory
         float s = size / 32f;
 
         var body = new RectangleF(3 * s, 6 * s, 26 * s, 24 * s);
-        var main = PhaseVisuals.DrawingColor(phase);
+        var main = PhaseVisuals.DrawingColor(phase, paused);
         var dark = Color.FromArgb(main.A, (int)(main.R * 0.78), (int)(main.G * 0.78), (int)(main.B * 0.78));
         using (var brush = new LinearGradientBrush(body, main, dark, 60f))
             g.FillEllipse(brush, body);
@@ -40,12 +41,19 @@ public static class TrayIconFactory
             ];
             g.FillPolygon(lb, pts);
         }
+
+        if (paused && phase != Phase.Idle)
+        {
+            using var bars = new SolidBrush(Color.White);
+            g.FillRectangle(bars, 11.5f * s, 12 * s, 3.5f * s, 13 * s);
+            g.FillRectangle(bars, 17 * s, 12 * s, 3.5f * s, 13 * s);
+        }
         return bmp;
     }
 
-    public static Icon CreateIcon(Phase phase)
+    public static Icon CreateIcon(Phase phase, bool paused = false)
     {
-        using var bmp = DrawBitmap(phase, 32);
+        using var bmp = DrawBitmap(phase, 32, paused);
         var h = bmp.GetHicon();
         try
         {
@@ -59,9 +67,9 @@ public static class TrayIconFactory
         }
     }
 
-    public static BitmapSource CreateImageSource(Phase phase)
+    public static BitmapSource CreateImageSource(Phase phase, bool paused = false)
     {
-        using var bmp = DrawBitmap(phase, 64);
+        using var bmp = DrawBitmap(phase, 64, paused);
         var h = bmp.GetHbitmap();
         try
         {

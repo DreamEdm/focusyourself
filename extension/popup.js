@@ -1,4 +1,4 @@
-import { applyPage, formatTime, t } from "./shared.js";
+import { applyPage, clockNow, formatTime, t } from "./shared.js";
 
 const $ = (id) => document.getElementById(id);
 const LABELS = { focus: "popupFocus", break: "popupBreak", idle: "popupIdle" };
@@ -7,9 +7,10 @@ async function render() {
   const { state, connected } = await chrome.storage.local.get(["state", "connected"]);
   const lang = applyPage(document, state);
   const phase = state?.state ?? "idle";
-  $("card").className = `card ${phase}`;
-  $("phase").textContent = t(lang, LABELS[phase] ?? "popupIdle");
-  $("time").textContent = state?.endsAt && phase !== "idle" ? formatTime(state.endsAt - Date.now()) : "--:--";
+  const paused = !!state?.pausedAt && phase !== "idle";
+  $("card").className = `card ${phase}${paused ? " paused" : ""}`;
+  $("phase").textContent = paused ? t(lang, "popupPaused") : t(lang, LABELS[phase] ?? "popupIdle");
+  $("time").textContent = state?.endsAt && phase !== "idle" ? formatTime(state.endsAt - clockNow(state)) : "--:--";
   $("domains").textContent =
     phase === "focus" && state.domains?.length
       ? t(lang, "popupBlocking", state.domains.join(t(lang, "listSep")))

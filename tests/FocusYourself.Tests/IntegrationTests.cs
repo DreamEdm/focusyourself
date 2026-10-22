@@ -167,6 +167,11 @@ public class FocusCoordinatorTests
     sealed class FakeUi : IFocusUi
     {
         public List<(ToastKind Kind, string Title)> Toasts { get; } = [];
+        public void Clear()
+        {
+            Toasts.Clear();
+            Chimes.Clear();
+        }
         public List<Chime> Chimes { get; } = [];
         public void ShowToast(ToastKind kind, string title, string message) => Toasts.Add((kind, title));
         public void ShowBlocked(string appName, string appPath) { }
@@ -209,6 +214,72 @@ public class FocusCoordinatorTests
             Assert.False(coord.Blocker.IsActive);
             Assert.False(coord.Folders.IsActive);
             Assert.Contains(Chime.BreakStart, ui.Chimes);
+        }
+        finally
+        {
+            coord.Shutdown(endFocus: true);
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Pause_keeps_blocking_plays_chimes_and_reminds_every_five_minutes()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fy-test-" + Guid.NewGuid().ToString("N"));
+        var store = new ConfigStore(dir);
+        var config = store.LoadConfig();
+        var l = new TcpListener(IPAddress.Loopback, 0);
+        l.Start();
+        config.BridgePort = ((IPEndPoint)l.LocalEndpoint).Port;
+        l.Stop();
+
+        var ui = new FakeUi();
+        using var coord = new FocusCoordinator(store, config, ui);
+        try
+        {
+            coord.Initialize(new FocusState());
+            coord.Engine.StartFocus();
+            ui.Clear();
+
+            coord.Engine.Pause();
+            Assert.Equal([Chime.Pause], ui.Chimes);
+            Assert.True(coord.Blocker.IsActive); // 暂停不解除拦截
+            var bridge = coord.CurrentBridgeState();
+            Assert.Equal("focus", bridge.State);
+            Assert.NotEmpty(bridge.Domains);
+            Assert.NotNull(bridge.PausedAt);
+            Assert.NotNull(store.LoadState().PausedAtUtc); // 暂停状态已持久化
+
+            // 刚暂停：不提醒
+            coord.Tick();
+            Assert.Empty(ui.Toasts);
+
+            // 引擎用的是真实时钟，这里通过恢复一个“5 分钟前暂停”的状态来模拟时间流逝
+            var paused = store.LoadState();
+            paused.PausedAtUtc = DateTime.UtcNow - FocusCoordinator.PauseReminderInterval - TimeSpan.FromSeconds(1);
+            coord.Engine.Restore(paused);
+            coord.Tick();
+            var reminder = Assert.Single(ui.Toasts);
+            Assert.Equal(ToastKind.Paused, reminder.Kind);
+            Assert.Equal(Chime.PauseReminder, ui.Chimes[^1]);
+            coord.Tick(); // 同一个 5 分钟内不重复提醒
+            Assert.Single(ui.Toasts);
+
+            // 休眠了很久：只补发一次
+            paused.PausedAtUtc = DateTime.UtcNow - TimeSpan.FromMinutes(23);
+            coord.Engine.Restore(paused);
+            coord.Tick();
+            Assert.Equal(2, ui.Toasts.Count);
+            coord.Tick();
+            Assert.Equal(2, ui.Toasts.Count);
+
+            ui.Clear();
+            coord.Engine.Resume();
+            Assert.Equal([Chime.Resume], ui.Chimes);
+            Assert.Null(coord.CurrentBridgeState().PausedAt);
+            Assert.Null(store.LoadState().PausedAtUtc);
+            coord.Tick();
+            Assert.Empty(ui.Toasts);
         }
         finally
         {

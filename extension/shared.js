@@ -47,6 +47,11 @@ export function buildRules(domains, blockedPageUrl, firstId = 1000) {
   return rules;
 }
 
+/** 计时用的“当前时刻”：桌面端暂停时停在暂停的那一刻。 */
+export function clockNow(state, now = Date.now()) {
+  return state?.pausedAt ?? now;
+}
+
 export function formatTime(ms) {
   const total = Math.max(0, Math.ceil(ms / 1000));
   const h = Math.floor(total / 3600);
@@ -95,6 +100,8 @@ export const STRINGS = {
     phaseFocus: "Focusing",
     phaseBreak: "Break",
     until: "until break",
+    phasePaused: "Paused",
+    untilPaused: "timer paused · still blocked",
     title: "This moment belongs to something more important",
     subBefore: "You were about to open ",
     subAfter: ". It'll be waiting for you on your break.",
@@ -111,6 +118,7 @@ export const STRINGS = {
     popupFocus: "Focusing",
     popupBreak: "On a break",
     popupIdle: "Not started",
+    popupPaused: "Paused",
     popupBlocking: "Blocking: {0}",
     popupNotBlocking: "No websites are blocked during breaks or when idle",
     popupConnected: "Connected to FocusYourself",
@@ -126,6 +134,8 @@ export const STRINGS = {
     phaseFocus: "专注中",
     phaseBreak: "休息",
     until: "距离休息",
+    phasePaused: "已暂停",
+    untilPaused: "计时已暂停 · 拦截仍有效",
     title: "这一刻，属于更重要的事",
     subBefore: "你刚才想打开 ",
     subAfter: "，它会在休息时等你。",
@@ -142,6 +152,7 @@ export const STRINGS = {
     popupFocus: "专注中",
     popupBreak: "休息中",
     popupIdle: "未开始",
+    popupPaused: "已暂停",
     popupBlocking: "正在屏蔽：{0}",
     popupNotBlocking: "休息和空闲时不屏蔽任何网站",
     popupConnected: "已连接 FocusYourself 桌面端",

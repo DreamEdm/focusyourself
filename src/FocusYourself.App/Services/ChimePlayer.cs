@@ -13,6 +13,12 @@ public enum Chime
     Blocked,
     /// <summary>番茄钟停止。</summary>
     Stop,
+    /// <summary>暂停：两个轻柔的下行音，像按下暂停键。</summary>
+    Pause,
+    /// <summary>继续：两个轻快的上行音。</summary>
+    Resume,
+    /// <summary>暂停太久的提醒：三声铃铛般的高音，第三声稍高。</summary>
+    PauseReminder,
 }
 
 /// <summary>运行时合成提示音（类似木琴/颂钵的泛音衰减），不需要任何音频资源文件。</summary>
@@ -41,7 +47,7 @@ public static class ChimePlayer
         });
     }
 
-    static byte[] Build(Chime chime)
+    internal static byte[] Build(Chime chime)
     {
         // (频率 Hz, 起始秒, 时长秒, 音量)
         (double f, double t, double d, double a)[] notes = chime switch
@@ -49,6 +55,9 @@ public static class ChimePlayer
             Chime.FocusStart => [(523.25, 0, 1.2, 0.5), (659.25, 0.12, 1.2, 0.45), (783.99, 0.24, 1.5, 0.45), (1046.5, 0.36, 1.6, 0.3)],
             Chime.BreakStart => [(783.99, 0, 1.4, 0.45), (659.25, 0.16, 1.4, 0.45), (523.25, 0.32, 1.8, 0.5)],
             Chime.Blocked => [(880, 0, 0.35, 0.4), (659.25, 0.13, 0.5, 0.4)],
+            Chime.Pause => [(698.46, 0, 0.6, 0.38), (587.33, 0.1, 0.9, 0.38)],
+            Chime.Resume => [(587.33, 0, 0.5, 0.38), (880, 0.09, 0.9, 0.4)],
+            Chime.PauseReminder => [(1174.66, 0, 0.7, 0.3), (1174.66, 0.22, 0.7, 0.3), (1567.98, 0.44, 1.3, 0.32), (783.99, 0.44, 1.3, 0.18)],
             _ => [(659.25, 0, 0.9, 0.4), (493.88, 0.18, 1.2, 0.4)],
         };
         var length = notes.Max(n => n.t + n.d) + 0.1;

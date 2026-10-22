@@ -72,6 +72,81 @@ public class PomodoroEngineTests
     }
 
     [Fact]
+    public void Pause_freezes_remaining_and_resume_shifts_the_end()
+    {
+        var e = Create();
+        var pauses = 0;
+        e.PauseChanged += (_, _) => pauses++;
+        e.StartFocus();
+        _now = _now.AddMinutes(10);
+
+        e.Pause();
+        Assert.True(e.IsPaused);
+        _now = _now.AddMinutes(40); // 暂停期间远超原本的结束时间
+        e.Tick();
+        Assert.Equal(Phase.Focus, e.Phase);
+        Assert.Equal(TimeSpan.FromMinutes(15), e.Remaining);
+        Assert.Equal(0.4, e.Progress, 3);
+        Assert.Equal(TimeSpan.FromMinutes(40), e.PausedFor);
+
+        e.Resume();
+        Assert.False(e.IsPaused);
+        Assert.Equal(TimeSpan.FromMinutes(15), e.Remaining);
+        Assert.Equal(0.4, e.Progress, 3);
+        Assert.Equal(TimeSpan.Zero, e.PausedFor);
+
+        _now = _now.AddMinutes(15);
+        e.Tick();
+        Assert.Equal(Phase.ShortBreak, e.Phase);
+        Assert.Equal(1, e.CompletedFocusRounds);
+        Assert.Equal(2, pauses);
+    }
+
+    [Fact]
+    public void Pause_is_ignored_when_idle_and_cleared_by_phase_changes()
+    {
+        var e = Create();
+        e.Pause();
+        Assert.False(e.IsPaused);
+
+        e.StartFocus();
+        e.Pause();
+        e.Pause(); // 重复暂停不改变暂停时刻
+        Assert.Equal(_now, e.PausedAtUtc);
+        e.Skip();
+        Assert.Equal(Phase.ShortBreak, e.Phase);
+        Assert.False(e.IsPaused);
+
+        e.TogglePause();
+        Assert.True(e.IsPaused);
+        e.Stop();
+        Assert.False(e.IsPaused);
+        e.Resume(); // 没暂停时继续无效
+        Assert.Equal(Phase.Idle, e.Phase);
+    }
+
+    [Fact]
+    public void Restore_keeps_a_paused_phase_even_after_its_end_time()
+    {
+        var e = Create();
+        e.StartFocus();
+        _now = _now.AddMinutes(20);
+        e.Pause();
+        var snapshot = e.Snapshot();
+        Assert.NotNull(snapshot.PausedAtUtc);
+
+        _now = _now.AddHours(2); // 程序关掉很久后重新打开
+        var restored = Create();
+        restored.Restore(snapshot);
+        Assert.Equal(Phase.Focus, restored.Phase);
+        Assert.True(restored.IsPaused);
+        Assert.Equal(TimeSpan.FromMinutes(5), restored.Remaining);
+
+        restored.Resume();
+        Assert.Equal(TimeSpan.FromMinutes(5), restored.Remaining);
+    }
+
+    [Fact]
     public void Restore_resumes_unfinished_focus_and_drops_expired()
     {
         var e = Create();
@@ -86,6 +161,27 @@ public class PomodoroEngineTests
         var expired = Create();
         expired.Restore(snapshot);
         Assert.Equal(Phase.Idle, expired.Phase);
+    }
+}
+
+public class ChimeTests
+{
+    [Fact]
+    public void Every_chime_is_a_distinct_audible_wav_without_clipping()
+    {
+        var waves = new Dictionary<Chime, byte[]>();
+        foreach (var chime in Enum.GetValues<Chime>())
+        {
+            var wav = ChimePlayer.Build(chime);
+            Assert.Equal("RIFF", System.Text.Encoding.ASCII.GetString(wav, 0, 4));
+            var samples = Enumerable.Range(0, (wav.Length - 44) / 2).Select(i => BitConverter.ToInt16(wav, 44 + i * 2)).ToArray();
+            var peak = samples.Max(s => Math.Abs((int)s));
+            Assert.InRange(peak, short.MaxValue / 10, short.MaxValue - 1); // 听得见，但没有削波
+            Assert.InRange(samples.Length / 44100.0, 0.5, 3);
+            waves[chime] = wav;
+        }
+        // 暂停、继续、提醒是三种不同的新音效
+        Assert.Equal(waves.Count, waves.Values.Select(Convert.ToBase64String).Distinct().Count());
     }
 }
 

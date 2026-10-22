@@ -22,6 +22,7 @@ public partial class ToastWindow : Window
             ToastKind.Focus => ("FocusBrush", "\uE916"),   // 秒表
             ToastKind.Break => ("BreakBrush", "\uE706"),   // 太阳
             ToastKind.Warning => ("WarnBrush", "\uE7BA"),  // 警告
+            ToastKind.Paused => ("WarnBrush", "\uE769"),   // 暂停
             _ => ("LongBreakBrush", "\uE946"),             // 信息
         };
         var brush = (Brush)FindResource(brushKey);

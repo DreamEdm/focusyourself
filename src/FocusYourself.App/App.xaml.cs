@@ -28,6 +28,8 @@ public partial class App : Application, IFocusUi, IAppShell
     readonly List<(MenuItem Item, string Key)> _trayItems = [];
     DispatcherTimer? _timer;
     Phase? _iconPhase;
+    bool _iconPaused;
+    MenuItem? _trayPauseItem;
     bool _hiddenHintShown;
     bool _exiting;
 
@@ -90,7 +92,7 @@ public partial class App : Application, IFocusUi, IAppShell
         OnTick(tickEngine: false);
 
         if (!args.Contains(AutoStart.AutoStartArg)) ShowMainWindow();
-        else if (_coord.Engine.IsFocus) ShowToast(ToastKind.Focus, Loc.T("FocusResumed"), Loc.F("FocusResumedBody", PhaseVisuals.Format(_coord.Engine.Remaining)));
+        else if (_coord.Engine.IsFocus && !_coord.Engine.IsPaused) ShowToast(ToastKind.Focus, Loc.T("FocusResumed"), Loc.F("FocusResumedBody", PhaseVisuals.Format(_coord.Engine.Remaining)));
 
         _ = _vm.Apps.ScanAsync();
 
@@ -201,7 +203,7 @@ public partial class App : Application, IFocusUi, IAppShell
             return;
         }
         _overlay ??= new OverlayWindow();
-        _overlay.Update(e.Phase, e.Remaining, e.Progress, _coord.Config.OverlayCorner, _coord.Config.OverlayOpacity);
+        _overlay.Update(e.Phase, e.IsPaused, e.Remaining, e.Progress, _coord.Config.OverlayCorner, _coord.Config.OverlayOpacity);
         if (!_overlay.IsVisible) _overlay.Show();
     }
 
@@ -225,6 +227,10 @@ public partial class App : Application, IFocusUi, IAppShell
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("TrayOpen", ShowMainWindow));
         menu.Items.Add(Item("TrayStartFocus", () => _coord.Engine.StartFocus()));
+        // 文字随状态在“暂停”/“继续”之间切换，见 UpdateTray
+        _trayPauseItem = new MenuItem();
+        _trayPauseItem.Click += (_, _) => _coord.Engine.TogglePause();
+        menu.Items.Add(_trayPauseItem);
         menu.Items.Add(Item("TraySkip", () => { ShowMainWindow(); _vm.Guarded(_coord.Engine.Skip); }));
         menu.Items.Add(Item("TrayStop", () => { ShowMainWindow(); _vm.Guarded(_coord.Engine.Stop); }));
         menu.Items.Add(new Separator());
@@ -265,17 +271,23 @@ public partial class App : Application, IFocusUi, IAppShell
     {
         if (_tray is null) return;
         var e = _coord.Engine;
-        if (_iconPhase != e.Phase)
+        if (_iconPhase != e.Phase || _iconPaused != e.IsPaused)
         {
             _iconPhase = e.Phase;
+            _iconPaused = e.IsPaused;
             var old = _tray.Icon;
-            _tray.Icon = TrayIconFactory.CreateIcon(e.Phase);
+            _tray.Icon = TrayIconFactory.CreateIcon(e.Phase, e.IsPaused);
             old?.Dispose();
-            if (_main is not null) _main.Icon = TrayIconFactory.CreateImageSource(e.Phase);
+            if (_main is not null) _main.Icon = TrayIconFactory.CreateImageSource(e.Phase, e.IsPaused);
         }
-        var text = e.Phase == Phase.Idle ? $"FocusYourself · {Loc.T("TrayIdle")}" : $"FocusYourself · {PhaseVisuals.Label(e.Phase)} {PhaseVisuals.Format(e.Remaining)}";
+        var text = e.Phase == Phase.Idle ? $"FocusYourself · {Loc.T("TrayIdle")}" : $"FocusYourself · {PhaseVisuals.Label(e.Phase, e.IsPaused)} {PhaseVisuals.Format(e.Remaining)}";
         _tray.ToolTipText = text;
         if (_trayHeader is not null) _trayHeader.Header = text;
+        if (_trayPauseItem is not null)
+        {
+            _trayPauseItem.Header = Loc.T(e.IsPaused ? "TrayResume" : "TrayPause");
+            _trayPauseItem.IsEnabled = e.Phase != Phase.Idle;
+        }
         if (_trayOverlayItem is not null) _trayOverlayItem.IsChecked = _coord.Config.OverlayEnabled;
     }
 
@@ -284,7 +296,7 @@ public partial class App : Application, IFocusUi, IAppShell
         if (_exiting) return;
         if (_main is null)
         {
-            _main = new MainWindow { DataContext = _vm, Icon = TrayIconFactory.CreateImageSource(_coord.Engine.Phase) };
+            _main = new MainWindow { DataContext = _vm, Icon = TrayIconFactory.CreateImageSource(_coord.Engine.Phase, _coord.Engine.IsPaused) };
             _main.HiddenToTray += (_, _) =>
             {
                 if (_hiddenHintShown) return;

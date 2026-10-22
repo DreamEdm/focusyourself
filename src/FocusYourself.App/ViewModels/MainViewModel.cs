@@ -63,6 +63,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isRunning;
     [ObservableProperty] private bool _isFocus;
     [ObservableProperty] private bool _isBreak;
+    [ObservableProperty] private bool _isPaused;
+    [ObservableProperty] private bool _showFocusActions;
+    [ObservableProperty] private bool _showBreakActions;
     [ObservableProperty] private bool _strictPending;
     [ObservableProperty] private bool _strictCanConfirm;
     [ObservableProperty] private string _strictText = "";
@@ -161,12 +164,15 @@ public partial class MainViewModel : ObservableObject
     {
         var e = _coord.Engine;
         var phase = e.Phase;
-        PhaseLabel = PhaseVisuals.Label(phase);
-        PhaseBrush = PhaseVisuals.Brush(phase);
+        PhaseLabel = PhaseVisuals.Label(phase, e.IsPaused);
+        PhaseBrush = PhaseVisuals.Brush(phase, e.IsPaused);
         IsIdle = phase == Phase.Idle;
         IsRunning = !IsIdle;
         IsFocus = e.IsFocus;
         IsBreak = e.IsBreak;
+        IsPaused = e.IsPaused;
+        ShowFocusActions = e.IsFocus && !e.IsPaused;
+        ShowBreakActions = e.IsBreak && !e.IsPaused;
         StrictLocked = _coord.StrictLocked;
         TimeText = IsIdle ? PhaseVisuals.Format(TimeSpan.FromMinutes(_coord.Config.Pomodoro.FocusMinutes)) : PhaseVisuals.Format(e.Remaining);
         Progress = e.Progress;
@@ -196,6 +202,8 @@ public partial class MainViewModel : ObservableObject
         SummaryText = Loc.F("SummaryText", apps, sites);
         HintText = Loc.T(phase switch
         {
+            Phase.Focus when e.IsPaused => "HintPausedFocus",
+            Phase.ShortBreak or Phase.LongBreak when e.IsPaused => "HintPausedBreak",
             Phase.Focus => _coord.Config.StrictMode ? "HintFocusStrict" : "HintFocus",
             Phase.ShortBreak or Phase.LongBreak => "HintBreak",
             _ => "HintIdle",
@@ -238,6 +246,14 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void StartBreak() => _coord.Engine.StartBreak();
+
+    /// <summary>暂停只冻结计时、不解除拦截，严格模式下也不需要冷静期。</summary>
+    [RelayCommand]
+    void TogglePause()
+    {
+        _coord.Engine.TogglePause();
+        Refresh();
+    }
 
     [RelayCommand]
     void Skip() => Guarded(_coord.Engine.Skip);

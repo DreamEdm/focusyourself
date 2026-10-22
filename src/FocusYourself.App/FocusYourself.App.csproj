@@ -9,7 +9,7 @@
     <AssemblyName>FocusYourself</AssemblyName>
     <RootNamespace>FocusYourself</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Product>FocusYourself</Product>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>app.ico</ApplicationIcon>

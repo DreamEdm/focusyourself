@@ -1,4 +1,4 @@
-import { applyPage, formatTime, quotesFor, t } from "./shared.js";
+import { applyPage, clockNow, formatTime, quotesFor, t } from "./shared.js";
 
 const $ = (id) => document.getElementById(id);
 const CIRCUMFERENCE = 2 * Math.PI * 116;
@@ -43,8 +43,11 @@ function render() {
     release();
     return;
   }
-  const now = Date.now();
+  const now = clockNow(state);
   const remaining = state.endsAt ? state.endsAt - now : 0;
+  $("phase").textContent = state.pausedAt ? t(lang, "phasePaused") : t(lang, "phaseFocus");
+  $("until").textContent = state.pausedAt ? t(lang, "untilPaused") : t(lang, "until");
+  document.body.classList.toggle("paused", !!state.pausedAt);
   $("time").textContent = state.endsAt ? formatTime(remaining) : "--:--";
   document.title = state.endsAt ? `${formatTime(remaining)} · ${t(lang, "titleSuffix")}` : t(lang, "pageTitle");
 

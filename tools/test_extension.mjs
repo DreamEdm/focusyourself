@@ -1,7 +1,7 @@
 // 校验扩展的屏蔽规则：node tools/test_extension.mjs
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildRules, matchesDomain, formatTime, STRINGS, t, pickLang, pickTheme, quotesFor } from "../extension/shared.js";
+import { buildRules, matchesDomain, formatTime, clockNow, STRINGS, t, pickLang, pickTheme, quotesFor } from "../extension/shared.js";
 
 const page = "chrome-extension://gfjfpbehokfclllomgjpppgmkaghlgjo/blocked.html";
 const rules = buildRules(["youtube.com", "bilibili.com"], page);
@@ -39,6 +39,10 @@ assert.equal(matchesDomain("chrome://extensions", ["bilibili.com"]), null);
 assert.equal(formatTime(25 * 60 * 1000), "25:00");
 assert.equal(formatTime(61_000), "01:01");
 assert.equal(formatTime(3_725_000), "1:02:05");
+// 暂停时倒计时冻结在暂停时刻
+assert.equal(clockNow({ pausedAt: 1000 }, 99_999), 1000);
+assert.equal(clockNow({ pausedAt: null }, 99_999), 99_999);
+assert.equal(formatTime(61_000 + 1000 - clockNow({ pausedAt: 1000 }, 500_000)), "01:01");
 
 // ---- 文字：两种语言键一致、占位符数量一致、页面引用的键都存在 ----
 const en = Object.keys(STRINGS.en).sort();

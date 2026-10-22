@@ -29,12 +29,21 @@ public sealed class PomodoroEngine
     public DateTime? EndsAtUtc { get; private set; }
     public DateTime? PhaseStartedUtc { get; private set; }
     public int CompletedFocusRounds { get; private set; }
+    /// <summary>暂停的时刻；为 null 表示没有暂停。暂停期间倒计时冻结，阶段（以及专注期的拦截）保持不变。</summary>
+    public DateTime? PausedAtUtc { get; private set; }
 
     public bool IsFocus => Phase == Phase.Focus;
     public bool IsBreak => Phase is Phase.ShortBreak or Phase.LongBreak;
+    public bool IsPaused => PausedAtUtc is not null;
+
+    /// <summary>已经暂停了多久（没暂停为 0）。</summary>
+    public TimeSpan PausedFor => PausedAtUtc is { } at ? _utcNow() - at : TimeSpan.Zero;
+
+    /// <summary>计算剩余时间用的“当前时刻”：暂停时停在暂停那一刻。</summary>
+    DateTime ClockNow => PausedAtUtc ?? _utcNow();
 
     public TimeSpan Remaining =>
-        EndsAtUtc is { } end ? TimeSpan.FromSeconds(Math.Max(0, Math.Ceiling((end - _utcNow()).TotalSeconds))) : TimeSpan.Zero;
+        EndsAtUtc is { } end ? TimeSpan.FromSeconds(Math.Max(0, Math.Ceiling((end - ClockNow).TotalSeconds))) : TimeSpan.Zero;
 
     public TimeSpan PhaseDuration =>
         EndsAtUtc is { } end && PhaseStartedUtc is { } start ? end - start : TimeSpan.Zero;
@@ -44,6 +53,8 @@ public sealed class PomodoroEngine
         PhaseDuration.TotalSeconds > 0 ? Math.Clamp(1 - Remaining.TotalSeconds / PhaseDuration.TotalSeconds, 0, 1) : 0;
 
     public event EventHandler<PhaseChangedEventArgs>? PhaseChanged;
+    /// <summary>暂停或继续时触发。</summary>
+    public event EventHandler? PauseChanged;
 
     public void StartFocus() => Enter(Phase.Focus, naturalEnd: false);
 
@@ -61,9 +72,34 @@ public sealed class PomodoroEngine
 
     public void Stop() => Enter(Phase.Idle, naturalEnd: false);
 
+    /// <summary>暂停当前阶段的倒计时（空闲或已暂停时无效）。</summary>
+    public void Pause()
+    {
+        if (Phase == Phase.Idle || IsPaused) return;
+        PausedAtUtc = _utcNow();
+        PauseChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>继续倒计时：开始和结束时间一起顺延暂停的时长，剩余时间和进度保持暂停时的样子。</summary>
+    public void Resume()
+    {
+        if (PausedAtUtc is not { } at) return;
+        var shift = _utcNow() - at;
+        EndsAtUtc += shift;
+        PhaseStartedUtc += shift;
+        PausedAtUtc = null;
+        PauseChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void TogglePause()
+    {
+        if (IsPaused) Resume();
+        else Pause();
+    }
+
     public void Tick()
     {
-        if (Phase == Phase.Idle || EndsAtUtc is not { } end || _utcNow() < end) return;
+        if (Phase == Phase.Idle || IsPaused || EndsAtUtc is not { } end || _utcNow() < end) return;
 
         if (Phase == Phase.Focus)
         {
@@ -81,6 +117,7 @@ public sealed class PomodoroEngine
         Phase = Phase,
         EndsAtUtc = EndsAtUtc,
         PhaseStartedUtc = PhaseStartedUtc,
+        PausedAtUtc = PausedAtUtc,
         CompletedFocusRounds = CompletedFocusRounds,
     };
 
@@ -88,16 +125,20 @@ public sealed class PomodoroEngine
     public void Restore(FocusState state)
     {
         CompletedFocusRounds = state.CompletedFocusRounds;
-        if (state.Phase == Phase.Idle || state.EndsAtUtc is not { } end || end <= _utcNow())
+        // 暂停中的阶段不会过期：按暂停那一刻判断还有没有剩余时间
+        var pausedAt = state.PausedAtUtc is { } p && p <= _utcNow() ? p : (DateTime?)null;
+        if (state.Phase == Phase.Idle || state.EndsAtUtc is not { } end || end <= (pausedAt ?? _utcNow()))
         {
             Phase = Phase.Idle;
             EndsAtUtc = null;
             PhaseStartedUtc = null;
+            PausedAtUtc = null;
             return;
         }
         Phase = state.Phase;
         EndsAtUtc = end;
-        PhaseStartedUtc = state.PhaseStartedUtc ?? _utcNow();
+        PhaseStartedUtc = state.PhaseStartedUtc ?? pausedAt ?? _utcNow();
+        PausedAtUtc = pausedAt;
     }
 
     Phase NextBreakPhase()
@@ -119,6 +160,7 @@ public sealed class PomodoroEngine
             Phase.LongBreak => Settings.LongBreakMinutes,
             _ => 0,
         };
+        PausedAtUtc = null;
         PhaseStartedUtc = next == Phase.Idle ? null : now;
         EndsAtUtc = next == Phase.Idle ? null : now.AddMinutes(Math.Max(1, minutes));
         PhaseChanged?.Invoke(this, new PhaseChangedEventArgs(old, next, naturalEnd));

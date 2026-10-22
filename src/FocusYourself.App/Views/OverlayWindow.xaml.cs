@@ -18,12 +18,12 @@ public partial class OverlayWindow : Window
         SizeChanged += (_, _) => PlaceInCorner();
     }
 
-    public void Update(Phase phase, TimeSpan remaining, double progress, OverlayCorner corner, double opacity)
+    public void Update(Phase phase, bool paused, TimeSpan remaining, double progress, OverlayCorner corner, double opacity)
     {
-        var brush = PhaseVisuals.Brush(phase);
+        var brush = PhaseVisuals.Brush(phase, paused);
         Dot.Fill = brush;
         Bar.Background = brush;
-        PhaseText.Text = PhaseVisuals.ShortLabel(phase);
+        PhaseText.Text = PhaseVisuals.ShortLabel(phase, paused);
         TimeText.Text = PhaseVisuals.Format(remaining);
         Opacity = Math.Clamp(opacity, 0.2, 1);
         if (ActualWidth > 0) Bar.Width = Math.Max(0, (((FrameworkElement)Bar.Parent).ActualWidth) * progress);

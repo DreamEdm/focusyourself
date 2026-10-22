@@ -40,6 +40,7 @@
 ## Features
 
 - **Pomodoro timer**: focus, short break and long break rotate automatically, with a chime and a notification card at every phase change.
+- **Pause**: something came up? Pause the timer (main window or tray) and resume later. Blocking stays on while a focus round is paused, and a reminder with its own chime pops up every 5 minutes so you don't forget to resume.
 - **App blocking**: blocked apps are closed the moment they start. Strong mode (admin) stops them from launching at all.
 - **Website blocking**: the browser extension sends blocked sites, subdomains included, to a focus page, and brings you back when the break starts.
 - **Folder reminders**: opening a restricted folder in File Explorer asks "Continue anyway?" before letting you in.

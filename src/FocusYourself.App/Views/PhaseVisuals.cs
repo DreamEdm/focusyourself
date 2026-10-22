@@ -7,6 +7,20 @@ namespace FocusYourself.Views;
 /// <summary>各阶段统一的文字和配色。</summary>
 public static class PhaseVisuals
 {
+    /// <summary>暂停时显示为“已暂停 · 专注中”。</summary>
+    public static string Label(Phase phase, bool paused) =>
+        paused && phase != Phase.Idle ? Loc.F("PhasePausedOf", Label(phase)) : Label(phase);
+
+    public static string ShortLabel(Phase phase, bool paused) =>
+        paused && phase != Phase.Idle ? Loc.T("PhasePausedShort") : ShortLabel(phase);
+
+    /// <summary>暂停时统一用琥珀色，一眼就能看出计时停了。</summary>
+    public static Brush Brush(Phase phase, bool paused) =>
+        paused && phase != Phase.Idle ? (Brush)Application.Current.FindResource("WarnBrush") : Brush(phase);
+
+    public static System.Drawing.Color DrawingColor(Phase phase, bool paused) =>
+        paused && phase != Phase.Idle ? System.Drawing.Color.FromArgb(0xF5, 0xB4, 0x55) : DrawingColor(phase);
+
     public static string Label(Phase phase) => Loc.T(phase switch
     {
         Phase.Focus => "PhaseFocus",

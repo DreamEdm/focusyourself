@@ -130,6 +130,15 @@ public class ScreenshotTests
             Pump(TimeSpan.FromMilliseconds(400));
             Save((FrameworkElement)main.Content, (Brush)app.FindResource("BgBrush"), Path.Combine(outDir, $"main-{pages[i]}.png"));
         }
+        // 暂停中：琥珀色圆环 + “继续 / 停止”
+        coord.Engine.Pause();
+        vm.Refresh();
+        main.Tabs.SelectedIndex = 0;
+        Pump(TimeSpan.FromMilliseconds(400));
+        Save((FrameworkElement)main.Content, (Brush)app.FindResource("BgBrush"), Path.Combine(outDir, "main-pomodoro-paused.png"));
+        coord.Engine.Resume();
+        vm.Refresh();
+
         vm.Guarded(() => { });
         config.StrictMode = true;
         vm.Guarded(() => { });
@@ -202,18 +211,30 @@ public class ScreenshotTests
         Save(toast2, null, Path.Combine(outDir, "toast-break.png"));
         toast2.Close();
 
+        var toast3 = new ToastWindow(ToastKind.Paused, Loc.F("ToastPausedTitle", 5), Loc.F("ToastPausedBodyFocus", "18:00"));
+        toast3.Left = -30000;
+        toast3.Show();
+        Pump(TimeSpan.FromMilliseconds(700));
+        Save(toast3, null, Path.Combine(outDir, "toast-paused.png"));
+        toast3.Close();
+
         var overlay = new OverlayWindow();
         overlay.Show();
         overlay.Left = -30000;
-        overlay.Update(Phase.Focus, coord.Engine.Remaining, coord.Engine.Progress, OverlayCorner.TopRight, 0.85);
+        overlay.Update(Phase.Focus, false, coord.Engine.Remaining, coord.Engine.Progress, OverlayCorner.TopRight, 0.85);
         Pump(TimeSpan.FromMilliseconds(300));
-        overlay.Update(Phase.Focus, coord.Engine.Remaining, coord.Engine.Progress, OverlayCorner.TopRight, 0.85);
+        overlay.Update(Phase.Focus, false, coord.Engine.Remaining, coord.Engine.Progress, OverlayCorner.TopRight, 0.85);
         Pump(TimeSpan.FromMilliseconds(100));
         Save(overlay, null, Path.Combine(outDir, "overlay.png"));
+        overlay.Update(Phase.Focus, true, coord.Engine.Remaining, coord.Engine.Progress, OverlayCorner.TopRight, 0.85);
+        Pump(TimeSpan.FromMilliseconds(100));
+        Save(overlay, null, Path.Combine(outDir, "overlay-paused.png"));
         overlay.Close();
 
         using (var bmp = TrayIconFactory.DrawBitmap(Phase.Focus, 64))
             bmp.Save(Path.Combine(outDir, "tray-focus.png"));
+        using (var bmp = TrayIconFactory.DrawBitmap(Phase.Focus, 64, paused: true))
+            bmp.Save(Path.Combine(outDir, "tray-paused.png"));
 
         coord.Shutdown(endFocus: true);
         Directory.Delete(dir, recursive: true);

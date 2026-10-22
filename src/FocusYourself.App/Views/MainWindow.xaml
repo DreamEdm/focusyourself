@@ -109,7 +109,7 @@
                                 <StackPanel IsItemsHost="True" />
                             </DockPanel>
                         </Border>
-                        <ContentPresenter Grid.Column="1" ContentSource="SelectedContent" />
+                        <ContentPresenter x:Name="PART_SelectedContentHost" Grid.Column="1" ContentSource="SelectedContent" />
                     </Grid>
                 </ControlTemplate>
             </TabControl.Template>
@@ -193,13 +193,20 @@
                                 <Button Style="{StaticResource BigButton}" Content="{l:T StartFocus}" Command="{Binding StartFocusCommand}" />
                                 <Button Style="{StaticResource GhostButton}" Content="{l:T BreakFirst}" Margin="12,0,0,0" Command="{Binding StartBreakCommand}" />
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsFocus, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowFocusActions, Converter={StaticResource BoolToVis}}">
                                 <Button Content="{l:T SkipToBreak}" Command="{Binding SkipCommand}" />
+                                <Button Content="{l:T Pause}" Margin="10,0,0,0" Command="{Binding TogglePauseCommand}" ToolTip="{l:T PauseTip}" />
                                 <Button Style="{StaticResource GhostButton}" Content="{l:T Stop}" Margin="10,0,0,0" Command="{Binding StopCommand}" />
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsBreak, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowBreakActions, Converter={StaticResource BoolToVis}}">
                                 <Button Style="{StaticResource BigButton}" Content="{l:T FocusEarly}" Command="{Binding SkipCommand}" />
+                                <Button Content="{l:T Pause}" Margin="10,0,0,0" Command="{Binding TogglePauseCommand}" ToolTip="{l:T PauseTip}" />
                                 <Button Style="{StaticResource GhostButton}" Content="{l:T Stop}" Margin="10,0,0,0" Command="{Binding StopCommand}" />
+                            </StackPanel>
+                            <!-- 暂停中：只留“继续”和“停止” -->
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsPaused, Converter={StaticResource BoolToVis}}">
+                                <Button Style="{StaticResource BigButton}" Content="{l:T Resume}" Command="{Binding TogglePauseCommand}" />
+                                <Button Style="{StaticResource GhostButton}" Content="{l:T Stop}" Margin="12,0,0,0" Command="{Binding StopCommand}" />
                             </StackPanel>
                         </StackPanel>
 

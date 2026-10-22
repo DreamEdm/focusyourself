@@ -82,6 +82,8 @@ async function doApplyState(msg) {
     endsAt: msg.endsAt ?? null,
     startedAt: msg.startedAt ?? null,
     rounds: msg.rounds ?? 0,
+    // 桌面端暂停的时刻：倒计时冻结在这一刻，拦截照旧
+    pausedAt: msg.pausedAt ?? null,
     // 断线时自动解除的 idle 状态不带语言/主题，沿用上一次的
     lang: msg.lang ?? prev?.lang ?? null,
     theme: msg.theme ?? prev?.theme ?? null,
@@ -120,10 +122,15 @@ async function updateBadge(state) {
   });
 }
 
+/** 断线时判断专注是否已过期：暂停中的状态按收到消息时还剩的时间往后算，避免永远不解除。 */
+function effectiveEnd(state) {
+  return state.pausedAt ? (state.receivedAt ?? Date.now()) + (state.endsAt - state.pausedAt) : state.endsAt;
+}
+
 async function checkStale() {
   if (ws?.readyState === WebSocket.OPEN) return;
   const { state } = await chrome.storage.local.get("state");
-  if (state?.state === "focus" && state.endsAt && Date.now() > state.endsAt + STALE_GRACE_MS) {
+  if (state?.state === "focus" && state.endsAt && Date.now() > effectiveEnd(state) + STALE_GRACE_MS) {
     await applyState({ type: "state", state: "idle", domains: [], endsAt: null });
   }
 }
