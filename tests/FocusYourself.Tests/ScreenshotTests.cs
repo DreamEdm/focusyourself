@@ -29,6 +29,7 @@ public class ScreenshotTests
         public void SetTheme(string theme) => ThemeManager.Apply(theme);
         public void SetLanguage(string language) => Loc.Instance.SetLanguage(language);
         public IReadOnlyList<SmartSuggestion>? ConfirmSmartBlock(IReadOnlyList<SmartSuggestion> suggestions) => null;
+        public void ShowExtensionSetup() { }
     }
 
     static string RepoRoot()
@@ -123,6 +124,21 @@ public class ScreenshotTests
 
         var main = new MainWindow { DataContext = vm, Left = -30000, Top = -30000, ShowActivated = false, ShowInTaskbar = false };
         main.Show();
+        // 空闲：圆环中间是可以直接修改的时长
+        var running = coord.Engine.Snapshot();
+        coord.Engine.Stop();
+        vm.Refresh();
+        main.Tabs.SelectedIndex = 0;
+        Pump(TimeSpan.FromMilliseconds(400));
+        Save((FrameworkElement)main.Content, (Brush)app.FindResource("BgBrush"), Path.Combine(outDir, "main-pomodoro-idle.png"));
+        // 点进去编辑时长：只剩分钟数 + 单位
+        main.Activate();
+        main.TimeEditor.Focus();
+        Pump(TimeSpan.FromMilliseconds(300));
+        Save((FrameworkElement)main.Content, (Brush)app.FindResource("BgBrush"), Path.Combine(outDir, "main-pomodoro-edit.png"));
+        System.Windows.Input.Keyboard.ClearFocus();
+        coord.Engine.Restore(running);
+        vm.Refresh();
         string[] pages = ["pomodoro", "apps", "sites", "folders", "settings"];
         for (int i = 0; i < pages.Length; i++)
         {
@@ -179,6 +195,32 @@ public class ScreenshotTests
         Pump(TimeSpan.FromMilliseconds(100));
         Save(smart, null, Path.Combine(outDir, "smart-block-ready.png"));
         smart.Close();
+
+        // 扩展安装向导：选择浏览器 → 逐个安装 → 完成
+        var conns = new List<BridgeConnectionInfo> { new("Chrome", @"C:\Users\me\AppData\Local\imput\Helium\Application\chrome.exe", DateTime.UtcNow) };
+        var setupVm = new ExtensionSetupViewModel(
+        [
+            new InstalledBrowser("Google Chrome", @"C:\Program Files\Google\Chrome\Application\chrome.exe", true),
+            new InstalledBrowser("Helium", @"C:\Users\me\AppData\Local\imput\Helium\Application\chrome.exe", true),
+            new InstalledBrowser("Microsoft Edge", @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", true),
+            new InstalledBrowser("Mozilla Firefox", @"C:\Program Files\Mozilla Firefox\firefox.exe", false),
+        ], @"C:\Program Files\FocusYourself\extension", () => conns, _ => Task.FromResult(true), _ => { });
+        var setup = new ExtensionSetupWindow(setupVm) { WindowStartupLocation = WindowStartupLocation.Manual, Left = -30000, Top = -30000, ShowActivated = false };
+        setup.Show();
+        Pump(TimeSpan.FromMilliseconds(400));
+        Save(setup, null, Path.Combine(outDir, "setup-choose.png"));
+        setupVm.StartCommand.Execute(null);
+        Pump(TimeSpan.FromMilliseconds(400));
+        Save(setup, null, Path.Combine(outDir, "setup-install.png"));
+        conns.Add(new BridgeConnectionInfo("Chrome", @"C:\Program Files\Google\Chrome\Application\chrome.exe", DateTime.UtcNow));
+        setupVm.Tick();
+        Pump(TimeSpan.FromMilliseconds(300));
+        Save(setup, null, Path.Combine(outDir, "setup-connected.png"));
+        setupVm.NextCommand.Execute(null);
+        setupVm.SkipCommand.Execute(null);
+        Pump(TimeSpan.FromMilliseconds(300));
+        Save(setup, null, Path.Combine(outDir, "setup-done.png"));
+        setup.Close();
 
         var clock = () => new FocusClock(true, coord.Engine.Remaining, coord.Engine.Progress);
         var blocked = BlockedWindow.CreateStandalone("Steam", @"C:\Windows\explorer.exe", clock);

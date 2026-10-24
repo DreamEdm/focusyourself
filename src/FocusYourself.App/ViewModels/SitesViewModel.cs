@@ -87,6 +87,9 @@ public partial class SitesViewModel : ObservableObject
     }
 
     [RelayCommand]
+    void InstallExtension() => _shell.ShowExtensionSetup();
+
+    [RelayCommand]
     void OpenExtensionFolder()
     {
         if (Directory.Exists(ExtensionFolder))

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FocusYourself",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "与 FocusYourself 桌面端联动：专注期间屏蔽指定网站，休息时自动解除。",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmbIBwYnaIA02O4+KM71ejkotLrmf6DUcY7KRFY4ipAEyrOFDs3yEuSvv4NT475RJbqvIh0Ux9PDZKengxADpKnzFG5dLNv5vT4aEl+RTQwiaAx5VGNjjCLKMygtX1zQ27OVogsMgJO4rQE93fj+nuvgfBYEQ0Z8tOMN8cna7AWdxXnqBQHAlE7vVBSje9c+62CAKKHLyiIq8DLZ505hX9Tv5RVxk2g2++K/7JEdku3Cn+EDjPYarZbJtVbR/4Ytg3447kdvdCBpbu+kCZ9Wn5M8gqlG2MZCmgrRF8j3XG9L9X9QGNk0wbelGKWfbPF44lxrYvp9dG1dKGwEPeLlDLwIDAQAB",
   "permissions": ["declarativeNetRequest", "storage", "alarms", "tabs"],

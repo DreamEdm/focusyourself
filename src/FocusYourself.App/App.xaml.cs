@@ -21,6 +21,7 @@ public partial class App : Application, IFocusUi, IAppShell
     FocusCoordinator _coord = null!;
     MainViewModel _vm = null!;
     MainWindow? _main;
+    ExtensionSetupWindow? _setup;
     OverlayWindow? _overlay;
     TaskbarIcon? _tray;
     MenuItem? _trayHeader;
@@ -346,6 +347,19 @@ public partial class App : Application, IFocusUi, IAppShell
     {
         var dlg = new SmartBlockWindow(suggestions) { Owner = _main is { IsVisible: true } ? _main : null };
         return dlg.ShowDialog() == true ? dlg.Selected : null;
+    }
+
+    public void ShowExtensionSetup()
+    {
+        if (_setup is not null)
+        {
+            _setup.Activate();
+            return;
+        }
+        var vm = new ExtensionSetupViewModel(BrowserInstaller.Detect(), _vm.Sites.ExtensionFolder, () => _coord.Bridge.Connections);
+        _setup = new ExtensionSetupWindow(vm) { Owner = _main is { IsVisible: true } ? _main : null };
+        _setup.Closed += (_, _) => _setup = null;
+        _setup.Show();
     }
 
     public void RequestExit()

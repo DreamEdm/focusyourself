@@ -42,6 +42,53 @@
             <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
+        <!-- 圆环中间可直接编辑的时长：平时和普通数字一样，悬停出现下划线和铅笔，编辑时只显示分钟数 -->
+        <Style x:Key="TimeEditor" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+            <Setter Property="FontSize" Value="72" />
+            <Setter Property="FontWeight" Value="Light" />
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource FocusBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource FocusBrush}" />
+            <Setter Property="SelectionOpacity" Value="0.3" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="MaxLength" Value="3" />
+            <Setter Property="MinWidth" Value="80" />
+            <Setter Property="InputMethod.IsInputMethodEnabled" Value="False" />
+            <Setter Property="Cursor" Value="IBeam" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="ContextMenu" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid Background="Transparent">
+                            <ScrollViewer x:Name="PART_ContentHost" Padding="0" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+                            <Border x:Name="Underline" Height="2" CornerRadius="1" VerticalAlignment="Bottom" Margin="6,0,6,6" Background="Transparent" />
+                            <!-- 不占布局的右侧标注，数字保持居中 -->
+                            <Canvas HorizontalAlignment="Right" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <TextBlock x:Name="Pencil" Canvas.Left="10" Canvas.Top="-9" Text="&#xE70F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="18" FontWeight="Normal" Foreground="{DynamicResource TextFaintBrush}" Opacity="0" />
+                                <TextBlock x:Name="Unit" Canvas.Left="10" Canvas.Top="6" Text="{l:T MinutesUnit}" FontFamily="{StaticResource UiFont}"
+                                           FontSize="18" FontWeight="Normal" Foreground="{DynamicResource TextDimBrush}" Visibility="Collapsed" />
+                            </Canvas>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Underline" Property="Background" Value="{DynamicResource RingTrackBrush}" />
+                                <Setter TargetName="Pencil" Property="Opacity" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Underline" Property="Background" Value="{DynamicResource FocusBrush}" />
+                                <Setter TargetName="Pencil" Property="Opacity" Value="0" />
+                                <Setter TargetName="Unit" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid x:Name="Root">
@@ -57,10 +104,13 @@
                         <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                             <DockPanel Margin="16,18,16,18">
                                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,6,0,30">
-                                    <Grid Width="34" Height="34">
-                                        <Ellipse Fill="{StaticResource FocusGradient}" />
-                                        <Path Data="M 17,4 C 15,8 11,8 9,7 C 11,10 14,10 17,9 C 20,10 23,10 25,7 C 23,8 19,8 17,4 Z" Fill="#FF4CC38A" Margin="0,-2,0,0" />
-                                    </Grid>
+                                    <Viewbox Width="36" Height="36">
+                                        <Grid Width="32" Height="32">
+                                            <Path Data="{x:Static v:TomatoShape.Body}" Fill="{StaticResource TomatoBodyBrush}" />
+                                            <Ellipse Width="6.6" Height="4.8" Margin="6.6,12.4,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="#50FFFFFF" />
+                                            <Path Data="{x:Static v:TomatoShape.Leaf}" Fill="{StaticResource TomatoLeafBrush}" />
+                                        </Grid>
+                                    </Viewbox>
                                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                                         <TextBlock Text="FocusYourself" FontSize="16" FontWeight="SemiBold" />
                                         <TextBlock Text="{l:T AppTagline}" FontSize="11" Foreground="{DynamicResource TextFaintBrush}" Margin="0,2,0,0" />
@@ -151,14 +201,23 @@
                             <v:ProgressRing Thickness="12" Progress="{Binding Progress}" RingBrush="{Binding PhaseBrush}" TrackBrush="{DynamicResource RingTrackBrush}" />
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding PhaseLabel}" Foreground="{Binding PhaseBrush}" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                                <TextBlock Text="{Binding TimeText}" FontFamily="{StaticResource DisplayFont}" FontSize="72" FontWeight="Light"
-                                           Typography.NumeralAlignment="Tabular" HorizontalAlignment="Center" Margin="0,2,0,2" />
+                                <Grid HorizontalAlignment="Center" Margin="0,2,0,2">
+                                    <TextBlock Text="{Binding TimeText}" FontFamily="{StaticResource DisplayFont}" FontSize="72" FontWeight="Light"
+                                               Typography.NumeralAlignment="Tabular" HorizontalAlignment="Center"
+                                               Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                                    <!-- 空闲时可以直接点数字改专注时长（只填分钟），滚轮或 ↑↓ 每次加减 1 分钟 -->
+                                    <TextBox x:Name="TimeEditor" Style="{StaticResource TimeEditor}" ToolTip="{l:T TimeEditTip}"
+                                             Visibility="{Binding IsIdle, Converter={StaticResource BoolToVis}}"
+                                             PreviewMouseLeftButtonDown="OnTimeEditorMouseDown" GotKeyboardFocus="OnTimeEditorGotFocus"
+                                             LostKeyboardFocus="OnTimeEditorLostFocus" PreviewKeyDown="OnTimeEditorKeyDown"
+                                             PreviewTextInput="OnTimeEditorTextInput" PreviewMouseWheel="OnTimeEditorWheel" />
+                                </Grid>
                                 <TextBlock Text="{Binding RoundText}" Style="{StaticResource Faint}" HorizontalAlignment="Center" />
                             </StackPanel>
                         </Grid>
 
-                        <!-- 一组番茄的进度点 -->
-                        <ItemsControl ItemsSource="{Binding RoundDots}" HorizontalAlignment="Center" Margin="0,22,0,0">
+                        <!-- 一组番茄的进度：吃完的是红番茄，正在专注的那颗从下往上慢慢变红，还没开始的是灰色 -->
+                        <ItemsControl ItemsSource="{Binding RoundDots}" HorizontalAlignment="Center" Margin="0,20,0,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal" />
@@ -166,23 +225,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Ellipse Width="10" Height="10" Margin="5,0" StrokeThickness="2">
-                                        <Ellipse.Style>
-                                            <Style TargetType="Ellipse">
-                                                <Setter Property="Fill" Value="{DynamicResource RingTrackBrush}" />
-                                                <Setter Property="Stroke" Value="Transparent" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Done}" Value="True">
-                                                        <Setter Property="Fill" Value="{DynamicResource FocusBrush}" />
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Current}" Value="True">
-                                                        <Setter Property="Stroke" Value="{DynamicResource FocusBrush}" />
-                                                        <Setter Property="Fill" Value="Transparent" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Ellipse.Style>
-                                    </Ellipse>
+                                    <Viewbox Width="24" Height="24" Margin="4,0" ToolTip="{Binding Tip}">
+                                        <Grid Width="32" Height="32" Background="Transparent">
+                                            <Path Data="{x:Static v:TomatoShape.Body}" Fill="{DynamicResource RingTrackBrush}" />
+                                            <!-- 已完成的部分：整颗番茄画好后只露出底部 FillHeight 那一截 -->
+                                            <Grid VerticalAlignment="Bottom" Height="{Binding FillHeight}" ClipToBounds="True">
+                                                <Grid Width="32" Height="32" VerticalAlignment="Bottom">
+                                                    <Path Data="{x:Static v:TomatoShape.Body}" Fill="{StaticResource TomatoBodyBrush}" />
+                                                    <Ellipse Width="6.6" Height="4.8" Margin="6.6,12.4,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="#50FFFFFF" />
+                                                </Grid>
+                                            </Grid>
+                                            <Path x:Name="Outline" Data="{x:Static v:TomatoShape.Body}" Stroke="{DynamicResource FocusBrush}" StrokeThickness="1.8" Visibility="Collapsed" />
+                                            <Path x:Name="Leaf" Data="{x:Static v:TomatoShape.Leaf}" Fill="{DynamicResource RingTrackBrush}" />
+                                        </Grid>
+                                    </Viewbox>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Done}" Value="True">
+                                            <Setter TargetName="Leaf" Property="Fill" Value="{StaticResource TomatoLeafBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Current}" Value="True">
+                                            <Setter TargetName="Leaf" Property="Fill" Value="{StaticResource TomatoLeafBrush}" />
+                                            <Setter TargetName="Outline" Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -244,13 +309,29 @@
                                 <TextBlock Text="{Binding FoldersCount}" FontFamily="{StaticResource DisplayFont}" FontSize="26" FontWeight="SemiBold" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource Card}" Margin="8,0,0,0" Padding="18,14">
+                        <!-- 扩展状态卡片：点击打开安装向导 -->
+                        <Button Margin="8,0,0,0" Command="{Binding OpenExtensionSetupCommand}" ToolTip="{l:T StatExtensionTip}" Cursor="Hand" FocusVisualStyle="{x:Null}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd" Style="{StaticResource Card}" Padding="18,14">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
                             <StackPanel>
-                                <TextBlock Text="{l:T StatExtension}" Style="{StaticResource Faint}" />
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="11" Foreground="{DynamicResource TextFaintBrush}" />
+                                    <TextBlock Text="{l:T StatExtension}" Style="{StaticResource Faint}" />
+                                </DockPanel>
                                 <TextBlock Text="{Binding ExtensionStatus}" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0" TextTrimming="CharacterEllipsis"
                                            ToolTip="{Binding ExtensionStatus}" />
                             </StackPanel>
-                        </Border>
+                        </Button>
                     </UniformGrid>
                 </Grid>
             </TabItem>
@@ -438,7 +519,16 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Text="{l:T ExtInstallTitle}" Style="{StaticResource H2}" Margin="0,22,0,12" />
+                            <!-- 安装向导入口 -->
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,18,0,0" HorizontalAlignment="Stretch" Command="{Binding OpenExtensionSetupCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xEA86;" FontSize="14" Margin="0,0,8,0" />
+                                    <TextBlock Text="{l:T SitesInstallButton}" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="{l:T SitesInstallHint}" Style="{StaticResource Faint}" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+                            <TextBlock Text="{l:T ExtInstallTitle}" Style="{StaticResource H2}" FontSize="14" Margin="0,24,0,12" />
                             <StackPanel DataContext="{Binding Sites}">
                                 <StackPanel.Resources>
                                     <Style x:Key="StepNo" TargetType="Border">

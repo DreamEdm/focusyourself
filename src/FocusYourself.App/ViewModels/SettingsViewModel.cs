@@ -85,7 +85,7 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         var p = Config.Pomodoro;
-        p.FocusMinutes = Math.Clamp(FocusMinutes, 1, 180);
+        p.FocusMinutes = MainViewModel.ClampFocusMinutes(FocusMinutes);
         p.ShortBreakMinutes = Math.Clamp(ShortBreakMinutes, 1, 60);
         p.LongBreakMinutes = Math.Clamp(LongBreakMinutes, 1, 120);
         p.RoundsBeforeLongBreak = Math.Clamp(RoundsBeforeLongBreak, 1, 12);

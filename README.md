@@ -39,10 +39,10 @@
 
 ## Features
 
-- **Pomodoro timer**: focus, short break and long break rotate automatically, with a chime and a notification card at every phase change.
+- **Pomodoro timer**: focus, short break and long break rotate automatically, with a chime and a notification card at every phase change. Click the time in the ring to change the focus length (or scroll over it), and a row of little tomatoes shows how far you are into the current set: the one you're working on turns red from the bottom up.
 - **Pause**: something came up? Pause the timer (main window or tray) and resume later. Blocking stays on while a focus round is paused, and a reminder with its own chime pops up every 5 minutes so you don't forget to resume.
 - **App blocking**: blocked apps are closed the moment they start. Strong mode (admin) stops them from launching at all.
-- **Website blocking**: the browser extension sends blocked sites, subdomains included, to a focus page, and brings you back when the break starts.
+- **Website blocking**: the browser extension sends blocked sites, subdomains included, to a focus page, and brings you back when the break starts. An install guide finds your browsers, opens each one's extensions page for you and ticks it off as soon as the extension connects.
 - **Folder reminders**: opening a restricted folder in File Explorer asks "Continue anyway?" before letting you in.
 - **Smart block**: one click finds game launchers, games, video apps and distracting websites, and you review the list before anything is blocked.
 - **Anti-bypass**: strict mode, a browser guard, and focus sessions that resume after a force-kill.
@@ -92,11 +92,12 @@ Get the latest version from the [Releases](../../releases/latest) page. It runs 
 ## Getting started
 
 1. Run `FocusYourself.exe`. Closing the window hides it to the system tray. Right-click the tray icon to quit.
-2. Install the browser extension in Helium, Chrome or Edge. The Websites tab has buttons that copy the address and open the folder.
-   1. Open `chrome://extensions`
-   2. Turn on **Developer mode** (top right)
-   3. Click **Load unpacked** and choose the `extension` folder next to `FocusYourself.exe`
-   4. In the extension's **Details**, enable **Allow in Incognito**
+2. Install the browser extension: on the Websites tab click **Install the extension…** (or click the extension card on the Pomodoro tab), tick your browsers and click **Start**. For each browser the guide opens its extensions page in a new window and selects the `extension` folder in File Explorer. You then:
+   1. Turn on **Developer mode** (top right; bottom of the sidebar in Edge)
+   2. Drag the `extension` folder onto the page (or click **Load unpacked** and pick it)
+   3. Optional: in the extension's **Details**, enable **Allow in Incognito**
+
+   The guide moves on by itself once the extension connects. Any Chromium-based browser works (Chrome, Edge, Helium, Brave, Vivaldi…); Firefox isn't supported. Browsers don't let other programs install extensions silently, which is why those two clicks are left to you.
 3. Click **Smart block**, or pick things yourself on the Apps, Websites and Folders tabs.
 4. Go to the Pomodoro tab and click **Start focus**.
 
@@ -231,7 +232,7 @@ You also need [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`winget install
 
 ```bash
 powershell -ExecutionPolicy Bypass -File tools/build-release.ps1                 # version from the .csproj
-powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 1.1.0
+powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 1.2.0
 ```
 
 The script publishes a self-contained single-file build and writes the installer, the portable zip and `SHA256SUMS.txt` to `release/`, which git doesn't track. Pass `-SkipInstaller` to build only the zip. To get a Simplified Chinese installer UI, put Inno Setup's unofficial `ChineseSimplified.isl` in `installer/`.

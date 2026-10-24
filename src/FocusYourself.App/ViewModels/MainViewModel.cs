@@ -19,6 +19,8 @@ public interface IAppShell
     void SetLanguage(string language);
     /// <summary>弹出智能拦截确认窗，返回用户勾选的条目；取消返回 null。</summary>
     IReadOnlyList<SmartSuggestion>? ConfirmSmartBlock(IReadOnlyList<SmartSuggestion> suggestions);
+    /// <summary>打开扩展安装向导（已打开就切到前台）。</summary>
+    void ShowExtensionSetup();
 }
 
 public partial class MainViewModel : ObservableObject
@@ -111,6 +113,9 @@ public partial class MainViewModel : ObservableObject
     void ToggleLanguage() => _shell.SetLanguage(Loc.Instance.IsChinese ? Loc.English : Loc.Chinese);
 
     [RelayCommand]
+    void OpenExtensionSetup() => _shell.ShowExtensionSetup();
+
+    [RelayCommand]
     void DismissSmartBanner()
     {
         ShowSmartBanner = false;
@@ -187,8 +192,11 @@ public partial class MainViewModel : ObservableObject
         }
         for (int i = 0; i < rounds; i++)
         {
-            RoundDots[i].Done = i < doneInCycle;
-            RoundDots[i].Current = e.IsFocus && i == doneInCycle;
+            var dot = RoundDots[i];
+            dot.Done = i < doneInCycle;
+            dot.Current = e.IsFocus && i == doneInCycle;
+            dot.Fill = dot.Done ? 1 : dot.Current ? e.Progress : 0;
+            dot.Tip = Loc.F(dot.Done ? "TomatoDone" : dot.Current ? "TomatoCurrent" : "TomatoPending", i + 1, rounds);
         }
         RoundText = Loc.F("RoundsDone", e.CompletedFocusRounds);
         AdminStatus = Loc.T(AdminHelper.IsAdmin ? "AdminYes" : "AdminNo");
@@ -240,6 +248,25 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>扩展上报的名字不可靠（Helium 自称 Chrome），优先用实际连接进程的产品名。</summary>
     static string BrowserName(BridgeConnectionInfo c) => c.OwnerPath is { } path ? PathUtil.FriendlyName(path) : c.Browser;
+
+    public int FocusMinutes => _coord.Config.Pomodoro.FocusMinutes;
+
+    /// <summary>与设置页的取值范围一致。</summary>
+    public static int ClampFocusMinutes(int minutes) => Math.Clamp(minutes, 1, 180);
+
+    /// <summary>在番茄钟页直接改专注时长（只在空闲时允许），立即保存并同步到设置页。</summary>
+    public void SetFocusMinutes(int minutes)
+    {
+        if (!IsIdle) return;
+        minutes = ClampFocusMinutes(minutes);
+        if (minutes != FocusMinutes)
+        {
+            _coord.Config.Pomodoro.FocusMinutes = minutes;
+            Settings.FocusMinutes = minutes;
+            _coord.SaveConfig();
+        }
+        Refresh();
+    }
 
     [RelayCommand]
     void StartFocus() => _coord.Engine.StartFocus();
@@ -297,8 +324,26 @@ public partial class MainViewModel : ObservableObject
     }
 }
 
+/// <summary>一组番茄里的一颗。</summary>
 public partial class RoundDot : ObservableObject
 {
     [ObservableProperty] private bool _done;
     [ObservableProperty] private bool _current;
+    [ObservableProperty] private string _tip = "";
+
+    /// <summary>这颗番茄变红的比例 0~1：完成为 1，正在专注时跟着进度走。</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FillHeight))]
+    private double _fill;
+
+    /// <summary>
+    /// 界面上番茄按 32 单位高绘制，果实占 y = 7.6 ~ 30.4；红色部分从果实底部往上长，
+    /// 让进度和看得见的红色高度成正比。
+    /// </summary>
+    public double FillHeight => Fill switch
+    {
+        <= 0 => 0,
+        >= 1 => 32,
+        _ => Math.Round(1.6 + Fill * 22.8, 2),
+    };
 }
