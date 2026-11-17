@@ -80,6 +80,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _themeTip = "";
     [ObservableProperty] private bool _showSmartBanner;
     [ObservableProperty] private bool _isSmartBusy;
+    [ObservableProperty] private bool _canResetRounds;
+    [ObservableProperty] private string _extensionCardTitle = "";
+    [ObservableProperty] private string _extensionCardDetail = "";
 
     void RefreshThemeTexts()
     {
@@ -199,6 +202,7 @@ public partial class MainViewModel : ObservableObject
             dot.Tip = Loc.F(dot.Done ? "TomatoDone" : dot.Current ? "TomatoCurrent" : "TomatoPending", i + 1, rounds);
         }
         RoundText = Loc.F("RoundsDone", e.CompletedFocusRounds);
+        CanResetRounds = IsIdle && e.CompletedFocusRounds > 0;
         AdminStatus = Loc.T(AdminHelper.IsAdmin ? "AdminYes" : "AdminNo");
 
         var apps = _coord.Config.Apps.Count(a => a.Enabled);
@@ -243,6 +247,15 @@ public partial class MainViewModel : ObservableObject
             1 => Loc.F("ExtConnectedOne", BrowserName(conns[0])),
             _ => Loc.F("ExtConnectedMany", conns.Count),
         });
+        // 番茄钟页卡片较窄：状态和浏览器分两行显示
+        (ExtensionCardTitle, ExtensionCardDetail) = _coord.Bridge.StartError is { } err
+            ? (Loc.T("ExtCardError"), err)
+            : conns.Count switch
+            {
+                0 => (Loc.T("ExtCardOffline"), Loc.T("ExtCardSetupHint")),
+                1 => (Loc.T("ExtCardConnected"), BrowserName(conns[0])),
+                _ => (Loc.T("ExtCardConnected"), Loc.F("ExtCardManyBrowsers", conns.Count)),
+            };
         Sites.RefreshConnections(conns);
     }
 
@@ -273,6 +286,14 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void StartBreak() => _coord.Engine.StartBreak();
+
+    /// <summary>番茄数清零（例如新的一天想从第一个番茄开始）。</summary>
+    [RelayCommand]
+    void ResetRounds()
+    {
+        _coord.Engine.ResetRounds();
+        Refresh();
+    }
 
     /// <summary>暂停只冻结计时、不解除拦截，严格模式下也不需要冷静期。</summary>
     [RelayCommand]

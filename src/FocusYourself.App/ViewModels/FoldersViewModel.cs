@@ -72,10 +72,27 @@ public partial class FoldersViewModel : ObservableObject
     void Remove(FolderItemViewModel item)
     {
         if (!AllowLoosen()) return;
+        var configIndex = _coord.Config.Folders.IndexOf(item.Rule);
+        var itemIndex = Items.IndexOf(item);
         _coord.Config.Folders.Remove(item.Rule);
         Items.Remove(item);
+        Error = "";
         _coord.RulesChanged();
+        // 撤销只会把限制加回来，严格模式下也允许
+        Undo.Show(Loc.F("RemovedItem", item.Name), () =>
+        {
+            var key = FolderGuard.NormalizeFolder(item.Path);
+            if (Items.Any(i => FolderGuard.NormalizeFolder(i.Path) == key)) return; // 期间又手动加回来了
+            _coord.Config.Folders.Insert(Math.Clamp(configIndex, 0, _coord.Config.Folders.Count), item.Rule);
+            Items.Insert(Math.Clamp(itemIndex, 0, Items.Count), item);
+            _coord.RulesChanged();
+        });
     }
+
+    public UndoBar Undo { get; } = new();
+
+    [RelayCommand]
+    void DismissError() => Error = "";
 
     /// <summary>每秒刷新“本轮已允许”标记。</summary>
     public void Refresh()
@@ -92,7 +109,11 @@ public partial class FoldersViewModel : ObservableObject
         return false;
     }
 
-    internal void Changed() => _coord.RulesChanged();
+    internal void Changed()
+    {
+        Error = "";
+        _coord.RulesChanged();
+    }
 }
 
 public partial class FolderItemViewModel : ObservableObject

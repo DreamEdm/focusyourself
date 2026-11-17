@@ -232,7 +232,7 @@ FY_SCREENSHOTS=docs/screenshots dotnet test --filter ScreenshotTests   # 重新�
 
 ```bash
 powershell -ExecutionPolicy Bypass -File tools/build-release.ps1                 # 版本号取自 .csproj
-powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 1.2.0
+powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 1.3.0
 ```
 
 脚本会生成自包含的单文件程序，并把安装包、便携版 zip 和 `SHA256SUMS.txt` 输出到 `release/`（git 不跟踪这个目录）。加 `-SkipInstaller` 只生成 zip。想让安装包有简体中文界面，把 Inno Setup 的非官方翻译 `ChineseSimplified.isl` 放进 `installer/` 即可。

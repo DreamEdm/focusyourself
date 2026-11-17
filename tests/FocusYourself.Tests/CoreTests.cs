@@ -52,6 +52,35 @@ public class PomodoroEngineTests
     }
 
     [Fact]
+    public void ResetRounds_clears_count_only_when_idle()
+    {
+        var e = Create(rounds: 4);
+        var events = 0;
+        e.RoundsChanged += (_, _) => events++;
+
+        e.ResetRounds(); // 本来就是 0：不触发
+        Assert.Equal(0, events);
+
+        e.StartFocus();
+        _now = _now.AddMinutes(25);
+        e.Tick();
+        Assert.Equal(1, e.CompletedFocusRounds);
+
+        e.ResetRounds(); // 休息中：不生效
+        Assert.Equal(1, e.CompletedFocusRounds);
+        e.Skip();
+        e.ResetRounds(); // 专注中：不生效
+        Assert.Equal(1, e.CompletedFocusRounds);
+        Assert.Equal(0, events);
+
+        e.Stop();
+        e.ResetRounds();
+        Assert.Equal(0, e.CompletedFocusRounds);
+        Assert.Equal(1, events);
+        Assert.Equal(0, e.Snapshot().CompletedFocusRounds);
+    }
+
+    [Fact]
     public void Skipping_focus_does_not_count_as_completed()
     {
         var e = Create();

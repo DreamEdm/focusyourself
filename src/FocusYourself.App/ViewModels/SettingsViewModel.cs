@@ -17,6 +17,25 @@ public partial class SettingsViewModel : ObservableObject
         _coord = coord;
         _shell = shell;
         Load();
+        GuardedBrowsers.CollectionChanged += (_, _) => { if (!_loading) SavedText = ""; };
+    }
+
+    /// <summary>Load 期间为 true：从配置填充时不算用户改动。</summary>
+    bool _loading;
+
+    /// <summary>保存后再改任何一项，“已保存”提示就不再准确，清掉它。</summary>
+    protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (!_loading && e.PropertyName is not (nameof(SavedText) or nameof(ResidueText))) SavedText = "";
+    }
+
+    /// <summary>托盘里切换了悬浮窗：只同步这一项，保留设置页里其它未保存的改动。</summary>
+    public void SyncOverlayEnabled(bool enabled)
+    {
+        _loading = true;
+        try { OverlayEnabled = enabled; }
+        finally { _loading = false; }
     }
 
     AppConfig Config => _coord.Config;
@@ -53,6 +72,13 @@ public partial class SettingsViewModel : ObservableObject
     public bool CornerBottomRight { get => Corner == OverlayCorner.BottomRight; set { if (value) Corner = OverlayCorner.BottomRight; } }
 
     public void Load()
+    {
+        _loading = true;
+        try { LoadCore(); }
+        finally { _loading = false; }
+    }
+
+    void LoadCore()
     {
         var p = Config.Pomodoro;
         FocusMinutes = p.FocusMinutes;

@@ -46,6 +46,7 @@ public sealed class FocusCoordinator : IDisposable
         Engine = new PomodoroEngine(config.Pomodoro);
         Engine.PhaseChanged += OnPhaseChanged;
         Engine.PauseChanged += OnPauseChanged;
+        Engine.RoundsChanged += OnRoundsChanged;
         Blocker.AppBlocked += OnAppBlocked;
         Folders.FolderBlocked += OnFolderBlocked;
     }
@@ -203,6 +204,13 @@ public sealed class FocusCoordinator : IDisposable
         // 暂停只冻结计时，拦截保持不变；扩展需要知道暂停时刻来冻结它显示的倒计时
         Bridge.Broadcast(CurrentBridgeState());
         _ui.PlayChime(Engine.IsPaused ? Chime.Pause : Chime.Resume);
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    void OnRoundsChanged(object? sender, EventArgs e)
+    {
+        _store.SaveState(Engine.Snapshot());
+        Bridge.Broadcast(CurrentBridgeState());
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 

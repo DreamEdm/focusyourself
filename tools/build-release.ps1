@@ -7,7 +7,7 @@
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\build-release.ps1
-  powershell -ExecutionPolicy Bypass -File tools\build-release.ps1 -Version 1.2.0
+  powershell -ExecutionPolicy Bypass -File tools\build-release.ps1 -Version 1.3.0
 #>
 param(
     # 默认取 src\FocusYourself.App\FocusYourself.App.csproj 里的 <Version>

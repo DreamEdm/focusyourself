@@ -42,6 +42,20 @@
             <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
+        <!-- 删除后的“已删除 xxx · 撤销”提示条（网站、文件夹共用），DataContext 是 UndoBar -->
+        <DataTemplate x:Key="UndoBarTemplate">
+            <Border CornerRadius="10" Background="{DynamicResource SubtleBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1"
+                    Padding="14,4,4,4" Margin="0,10,0,0" Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource CaptionButton}" Width="28" Height="28" Content="&#xE8BB;"
+                            ToolTip="{l:T Close}" Command="{Binding DismissCommand}" />
+                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="12,5" Margin="8,0,2,0" Foreground="{DynamicResource FocusBrush}"
+                            Content="{l:T Undo}" Command="{Binding UndoCommand}" />
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE74D;" FontSize="13" Foreground="{DynamicResource TextFaintBrush}" Margin="0,0,10,0" />
+                    <TextBlock Text="{Binding Text}" FontSize="13" Foreground="{DynamicResource TextDimBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </Border>
+        </DataTemplate>
         <!-- 圆环中间可直接编辑的时长：平时和普通数字一样，悬停出现下划线和铅笔，编辑时只显示分钟数 -->
         <Style x:Key="TimeEditor" TargetType="TextBox">
             <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
@@ -217,7 +231,14 @@
                         </Grid>
 
                         <!-- 一组番茄的进度：吃完的是红番茄，正在专注的那颗从下往上慢慢变红，还没开始的是灰色 -->
-                        <ItemsControl ItemsSource="{Binding RoundDots}" HorizontalAlignment="Center" Margin="0,20,0,0">
+                        <Grid HorizontalAlignment="Center" Margin="0,20,0,0">
+                        <!-- 重置番茄数：放在不占布局的 Canvas 里，番茄保持居中 -->
+                        <Canvas HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Canvas.Left="6" Canvas.Top="-13" Style="{StaticResource CaptionButton}" Width="26" Height="26" FontSize="12"
+                                    Content="&#xE72C;" ToolTip="{l:T ResetRoundsTip}" Cursor="Hand"
+                                    Command="{Binding ResetRoundsCommand}" Visibility="{Binding CanResetRounds, Converter={StaticResource BoolToVis}}" />
+                        </Canvas>
+                        <ItemsControl ItemsSource="{Binding RoundDots}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal" />
@@ -251,6 +272,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        </Grid>
 
                         <!-- 操作按钮 -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,30,0,0">
@@ -328,7 +350,8 @@
                                     <TextBlock DockPanel.Dock="Right" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="11" Foreground="{DynamicResource TextFaintBrush}" />
                                     <TextBlock Text="{l:T StatExtension}" Style="{StaticResource Faint}" />
                                 </DockPanel>
-                                <TextBlock Text="{Binding ExtensionStatus}" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0" TextTrimming="CharacterEllipsis"
+                                <TextBlock Text="{Binding ExtensionCardTitle}" FontSize="14" FontWeight="SemiBold" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding ExtensionCardDetail}" Style="{StaticResource Faint}" Margin="0,3,0,0"
                                            ToolTip="{Binding ExtensionStatus}" />
                             </StackPanel>
                         </Button>
@@ -462,6 +485,7 @@
                                 <TextBox Tag="{l:T SitesInput}" Text="{Binding NewDomain, UpdateSourceTrigger=PropertyChanged}" />
                             </DockPanel>
                             <TextBlock DockPanel.Dock="Top" Text="{Binding Error}" Foreground="{DynamicResource WarnBrush}" FontSize="12" Margin="4,6,0,0" />
+                            <ContentControl DockPanel.Dock="Bottom" Content="{Binding Undo}" ContentTemplate="{StaticResource UndoBarTemplate}" />
                             <ListBox Style="{StaticResource PlainList}" ItemsSource="{Binding Items}" Margin="-6,6,-6,-6">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -583,6 +607,8 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <DockPanel Margin="0,0,0,20">
                         <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="{l:T AddFolder}" VerticalAlignment="Bottom" Command="{Binding AddCommand}" />
@@ -644,8 +670,22 @@
                             </StackPanel>
                         </Grid>
                     </Border>
-                    <TextBlock Grid.Row="1" Text="{Binding Error}" Foreground="{DynamicResource WarnBrush}" FontSize="12"
-                               VerticalAlignment="Bottom" Margin="16,0,0,12" TextWrapping="Wrap" />
+                    <!-- 添加被拒的原因：单独一行，可以手动关掉 -->
+                    <DockPanel Grid.Row="2" Margin="4,10,0,0">
+                        <DockPanel.Style>
+                            <Style TargetType="DockPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Error}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource CaptionButton}" Width="28" Height="28" Content="&#xE8BB;" VerticalAlignment="Top"
+                                ToolTip="{l:T Close}" Command="{Binding DismissErrorCommand}" />
+                        <TextBlock Text="{Binding Error}" Foreground="{DynamicResource WarnBrush}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <ContentControl Grid.Row="3" Content="{Binding Undo}" ContentTemplate="{StaticResource UndoBarTemplate}" />
                 </Grid>
             </TabItem>
 

@@ -31,6 +31,9 @@ public partial class App : Application, IFocusUi, IAppShell
     Phase? _iconPhase;
     bool _iconPaused;
     MenuItem? _trayPauseItem;
+    MenuItem? _trayStartItem;
+    MenuItem? _traySkipItem;
+    MenuItem? _trayStopItem;
     bool _hiddenHintShown;
     bool _exiting;
 
@@ -219,7 +222,8 @@ public partial class App : Application, IFocusUi, IAppShell
         {
             _coord.Config.OverlayEnabled = _trayOverlayItem.IsChecked;
             _coord.SaveConfig();
-            _vm.Settings.Load();
+            // 只同步这一项，不要冲掉设置页里还没保存的改动
+            _vm.Settings.SyncOverlayEnabled(_trayOverlayItem.IsChecked);
             UpdateOverlay();
         };
 
@@ -227,13 +231,14 @@ public partial class App : Application, IFocusUi, IAppShell
         menu.Items.Add(_trayHeader);
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("TrayOpen", ShowMainWindow));
-        menu.Items.Add(Item("TrayStartFocus", () => _coord.Engine.StartFocus()));
+        // 开始/跳过/停止按当前阶段启用，见 UpdateTray（专注中再点“开始专注”会把这一轮重新计时）
+        menu.Items.Add(_trayStartItem = Item("TrayStartFocus", () => { if (!_coord.Engine.IsFocus) _coord.Engine.StartFocus(); }));
         // 文字随状态在“暂停”/“继续”之间切换，见 UpdateTray
         _trayPauseItem = new MenuItem();
         _trayPauseItem.Click += (_, _) => _coord.Engine.TogglePause();
         menu.Items.Add(_trayPauseItem);
-        menu.Items.Add(Item("TraySkip", () => { ShowMainWindow(); _vm.Guarded(_coord.Engine.Skip); }));
-        menu.Items.Add(Item("TrayStop", () => { ShowMainWindow(); _vm.Guarded(_coord.Engine.Stop); }));
+        menu.Items.Add(_traySkipItem = Item("TraySkip", () => { ShowMainWindow(); _vm.Guarded(_coord.Engine.Skip); }));
+        menu.Items.Add(_trayStopItem = Item("TrayStop", () => { ShowMainWindow(); _vm.Guarded(_coord.Engine.Stop); }));
         menu.Items.Add(new Separator());
         menu.Items.Add(_trayOverlayItem);
         menu.Items.Add(new Separator());
@@ -289,6 +294,9 @@ public partial class App : Application, IFocusUi, IAppShell
             _trayPauseItem.Header = Loc.T(e.IsPaused ? "TrayResume" : "TrayPause");
             _trayPauseItem.IsEnabled = e.Phase != Phase.Idle;
         }
+        if (_trayStartItem is not null) _trayStartItem.IsEnabled = !e.IsFocus;
+        if (_traySkipItem is not null) _traySkipItem.IsEnabled = e.Phase != Phase.Idle;
+        if (_trayStopItem is not null) _trayStopItem.IsEnabled = e.Phase != Phase.Idle;
         if (_trayOverlayItem is not null) _trayOverlayItem.IsChecked = _coord.Config.OverlayEnabled;
     }
 

@@ -42,11 +42,13 @@ public partial class SitesViewModel : ObservableObject
             Error = Loc.T("SitesBadDomain");
             return;
         }
-        Error = "";
         NewDomain = "";
+        Error = "";
         var existing = Items.FirstOrDefault(i => i.Domain == domain);
         if (existing is not null)
         {
+            // 已经在列表里：给个提示，被关掉的顺手重新打开
+            Error = Loc.F(existing.IsEnabled ? "SitesAlreadyAdded" : "SitesReEnabled", domain);
             existing.IsEnabled = true;
             return;
         }
@@ -57,6 +59,14 @@ public partial class SitesViewModel : ObservableObject
     }
 
     bool CanAdd() => !string.IsNullOrWhiteSpace(NewDomain);
+
+    /// <summary>重新输入时清掉上一次的提示。</summary>
+    partial void OnNewDomainChanged(string value)
+    {
+        if (value.Length > 0) Error = "";
+    }
+
+    public UndoBar Undo { get; } = new();
 
     /// <summary>智能拦截批量加入；调用方负责最后统一 RulesChanged。</summary>
     public void AddMany(IEnumerable<string> domains)
@@ -81,9 +91,20 @@ public partial class SitesViewModel : ObservableObject
     void Remove(SiteItemViewModel item)
     {
         if (!AllowLoosen()) return;
+        var configIndex = _coord.Config.Sites.IndexOf(item.Rule);
+        var itemIndex = Items.IndexOf(item);
         _coord.Config.Sites.Remove(item.Rule);
         Items.Remove(item);
+        Error = "";
         _coord.RulesChanged();
+        // 撤销只会把拦截加回来，严格模式下也允许
+        Undo.Show(Loc.F("RemovedItem", item.Domain), () =>
+        {
+            if (Items.Any(i => i.Domain == item.Domain)) return; // 期间又手动加回来了
+            _coord.Config.Sites.Insert(Math.Clamp(configIndex, 0, _coord.Config.Sites.Count), item.Rule);
+            Items.Insert(Math.Clamp(itemIndex, 0, Items.Count), item);
+            _coord.RulesChanged();
+        });
     }
 
     [RelayCommand]

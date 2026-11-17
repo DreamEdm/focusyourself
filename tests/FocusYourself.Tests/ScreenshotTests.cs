@@ -146,6 +146,19 @@ public class ScreenshotTests
             Pump(TimeSpan.FromMilliseconds(400));
             Save((FrameworkElement)main.Content, (Brush)app.FindResource("BgBrush"), Path.Combine(outDir, $"main-{pages[i]}.png"));
         }
+        // 删除后底部出现“撤销”条；文件夹页的报错在单独一行
+        vm.Sites.RemoveCommand.Execute(vm.Sites.Items[^1]);
+        main.Tabs.SelectedIndex = 2;
+        Pump(TimeSpan.FromMilliseconds(400));
+        Save((FrameworkElement)main.Content, (Brush)app.FindResource("BgBrush"), Path.Combine(outDir, "main-sites-undo.png"));
+        vm.Sites.Undo.UndoCommand.Execute(null);
+        vm.Folders.RemoveCommand.Execute(vm.Folders.Items[^1]);
+        vm.Folders.Error = @"C:\Windows: " + Loc.T("FoldersEmptyHint");
+        main.Tabs.SelectedIndex = 3;
+        Pump(TimeSpan.FromMilliseconds(400));
+        Save((FrameworkElement)main.Content, (Brush)app.FindResource("BgBrush"), Path.Combine(outDir, "main-folders-undo.png"));
+        vm.Folders.Undo.UndoCommand.Execute(null);
+        vm.Folders.Error = "";
         // 暂停中：琥珀色圆环 + “继续 / 停止”
         coord.Engine.Pause();
         vm.Refresh();

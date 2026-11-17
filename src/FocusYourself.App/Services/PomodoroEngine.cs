@@ -55,6 +55,16 @@ public sealed class PomodoroEngine
     public event EventHandler<PhaseChangedEventArgs>? PhaseChanged;
     /// <summary>暂停或继续时触发。</summary>
     public event EventHandler? PauseChanged;
+    /// <summary>已完成轮数被手动修改（重置）时触发。</summary>
+    public event EventHandler? RoundsChanged;
+
+    /// <summary>把已完成的番茄数清零，从第一个番茄重新开始。只在空闲时有效。</summary>
+    public void ResetRounds()
+    {
+        if (Phase != Phase.Idle || CompletedFocusRounds == 0) return;
+        CompletedFocusRounds = 0;
+        RoundsChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     public void StartFocus() => Enter(Phase.Focus, naturalEnd: false);
 

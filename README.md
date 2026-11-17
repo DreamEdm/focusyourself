@@ -232,7 +232,7 @@ You also need [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`winget install
 
 ```bash
 powershell -ExecutionPolicy Bypass -File tools/build-release.ps1                 # version from the .csproj
-powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 1.2.0
+powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 1.3.0
 ```
 
 The script publishes a self-contained single-file build and writes the installer, the portable zip and `SHA256SUMS.txt` to `release/`, which git doesn't track. Pass `-SkipInstaller` to build only the zip. To get a Simplified Chinese installer UI, put Inno Setup's unofficial `ChineseSimplified.isl` in `installer/`.
